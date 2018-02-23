@@ -149,6 +149,9 @@ ProgramStart:
 	ld	[GBCFlag],a
 	jp	z,DoInit			; if we are, jump to main init routine
 	CopyTileset1BPP	DebugFont,0,97
+	xor	a
+	ldh	[rSCX],a
+	ldh	[rSCY],a
 	ld	hl,.dmgTilemap
 	call	LoadMapText
 	
@@ -504,12 +507,27 @@ ShowVinesauceSplash:
 	ld	a,1
 	ld	[RGBG_fade_to_color],a
 	call	RGBG_SimpleFadeOut
+	WaitForVBlank
+	xor	a
+	ldh	[rLCDC],a
+	
+	CopyTileset1BPP	DebugFont,0,97
+	ld	hl,TitleMap
+	call	LoadMapText
 	
 	ld	a,1
 	ld	[rROMB0],a
 	xor	a
 	ld	[FadeType],a
 	call	DS_Init
+	xor	a
+	ldh	[rSCX],a
+	ldh	[rSCY],a
+	ld	a,%10010001
+	ldh	[rLCDC],a
+	
+	Pal_FadeToPal	Pal_Grayscale,1,8
+		
 	jr	ShowTitleScreen
 	
 VinesauceScrollTableY:
@@ -1432,6 +1450,28 @@ CharSelectTiles:	incbin	"GFX/CharSelectTiles.bin"
 CharSelectTiles_End
 	
 CharSelectMap:		incbin	"GFX/CharSelectMap.bin"
+
+TitleMap:	; placeholder for now
+;		 ####################
+	db	"                    "
+	db	"- SCOOT THE BURBS - "
+	db	"Pre-alpha build v0.1"
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"    PRESS START!    "
+	db	"                    "
+;		 ####################
 	
 ; ================================================================
 ; GBS Header

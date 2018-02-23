@@ -173,9 +173,9 @@ RGBG_SimpleFadeOut::
 	cp	b		; Are we done?
 	jp	nz,.loop1	; not yet
 	
-	ld	a,1
+	ld	a,Bank(DevSound)
 	call	DS_Play
-	ld	a,2
+	ld	a,Bank(FXHammer)
 	call	FXHammer_Update
 	
 	pop	bc
@@ -738,12 +738,7 @@ RGBG_RunComplexFadeBkg::
 	dec B
 	jp nz, .wvbls
 
-	call RGBG_UpdateComplexFadePalsBkg
-	ld	a,1
-	call	DS_Play
-	ld	a,2
-	call	FXHammer_Update
-	
+	call RGBG_UpdateComplexFadePalsBkg	
 	pop BC
 	
 	ld A,[RGBG_fade_steps_left_bkg]
@@ -784,10 +779,6 @@ RGBG_RunComplexFadeObj::
 	jp nz, .wvbls
 	
 	call RGBG_UpdateComplexFadePalsObj
-	ld	a,1
-	call	DS_Play
-	ld	a,2
-	call	FXHammer_Update
 	
 	pop BC
 	
