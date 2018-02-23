@@ -1,0 +1,36 @@
+# for any of the poor souls with save game files in their working directory
+*.sgm
+*.sav
+*.rtc
+*.sn*
+*.dat
+
+# rgbds extras
+*.sym
+*.obj
+
+# precompiled Python
+*.pyc
+*$py.class
+
+# nezplug++ ini file
+nezplay.ini
+
+# FamiTracker modules (i use GBSImport for testing in some cases)
+*.ftm
+
+# from github/gitignore/blob/master/Global/Windows.gitignore
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows shortcuts
+*.lnk
+*.db
+*.bak
