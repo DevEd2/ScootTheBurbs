@@ -1,0 +1,1 @@
+This folder will contain any audio samples that are added to the game.
