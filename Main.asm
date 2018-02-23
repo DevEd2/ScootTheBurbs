@@ -1047,6 +1047,7 @@ Stat_WindowTransition:
 	ld	c,rWX-$ff00
 	ld	a,[WindowTransitionOffset]
 	rra
+	rra
 	ld	d,a
 	ld	a,[WindowBasePos]
 	ld	e,a
