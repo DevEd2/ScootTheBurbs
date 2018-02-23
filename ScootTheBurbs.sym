@@ -51,7 +51,6 @@
 00:1F72 Pal_Vineshroom
 00:0C25 LoadObjPalLine
 00:0C9F MetaspriteToOAM
-00:25D2 DevSound
 00:07E7 RGBG_SimpleFadeOut
 00:081A RGBG_SimpleFadeOut.black1
 00:0B31 RGBG_ConvertColor15to24

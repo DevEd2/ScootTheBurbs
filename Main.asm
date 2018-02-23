@@ -501,16 +501,15 @@ ShowVinesauceSplash:
 	and	a
 	jr	nz,.loop6
 	
-	ld	a,Bank(DevSound)
+	ld	a,1
+	ld	[RGBG_fade_to_color],a
+	call	RGBG_SimpleFadeOut
+	
+	ld	a,1
 	ld	[rROMB0],a
 	xor	a
 	ld	[FadeType],a
 	call	DS_Init
-	
-	ld	a,1
-	ld	[RGBG_fade_to_color],a
-	call	RGBG_SimpleFadeOut
-		
 	jr	ShowTitleScreen
 	
 VinesauceScrollTableY:
