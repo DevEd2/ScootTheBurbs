@@ -1435,8 +1435,16 @@ CharSelectTiles_End
 CharSelectMap:		incbin	"GFX/CharSelectMap.bin"
 	
 ; ================================================================
+; GBS Header
+; ================================================================
+
+if def(GBS)
+	include	"gbs.asm"
+endc
+	
+; ================================================================
 ; Other data banks
 ; ================================================================
 
-include	"FXHammer.asm"	; SFX
 include	"DevSound.asm"	; music
+include	"FXHammer.asm"	; SFX

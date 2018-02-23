@@ -11,7 +11,7 @@ FXHammer_RAM1	equ	2
 FXHammer_cnt	equ	3
 FXHammer_ptr	equ	4 ; 2 bytes
 
-FXHammerBank	equ	1
+FXHammerBank	equ	2
 FXHammerData	equ	$4200
 
 section	"FX Hammer",romx,bank[FXHammerBank]
