@@ -358,7 +358,7 @@ ShowDevsoftSplash:
 	ld	a,[rIE]
 	xor	IEF_LCDC
 	ldh	[rIE],a
-	ld	a,1
+	xor	a
 	ld	[SpritesDisabled],a
 	ei
 	WaitForVBlank
@@ -519,7 +519,6 @@ ShowVinesauceSplash:
 	ld	[rROMB0],a
 	xor	a
 	ld	[FadeType],a
-	inc	a
 	call	DS_Init
 	xor	a
 	ldh	[rSCX],a
@@ -1025,7 +1024,7 @@ DoVBlank:
 	ldh	[sys_VBlankIRQ],a
 	ld	a,[SpritesDisabled]
 	and	a
-	call	nz,_OAM_DMA
+	call	z,_OAM_DMA
 	
 ;	ldh	a,[sys_GameMode]
 ;	and	a
@@ -1047,6 +1046,7 @@ Stat_WindowTransition:
 	; init
 	ld	c,rWX-$ff00
 	ld	a,[WindowTransitionOffset]
+	rra
 	ld	d,a
 	ld	a,[WindowBasePos]
 	ld	e,a
