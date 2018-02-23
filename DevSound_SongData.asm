@@ -8,11 +8,13 @@
 
 SongSpeedTable:
 	db	8,7		; scoot the burbs
+	db	3,3		; character select
 
 SongSpeedTable_End
 	
 SongPointerTable:
 	dw	PT_ScootTheBurbs
+	dw	PT_CharacterSelect
 SongPointerTable_End
 
 if(SongSpeedTable_End-SongSpeedTable) < (SongPointerTable_End-SongPointerTable)
@@ -62,6 +64,8 @@ vol_BurbsFade:		db	$ff,$a2
 vol_BurbsBass:		db	w3,w3,w3,w3,w3,w3,w2,$fe,6
 vol_BurbsBassL:		db	w3,w3,w3,w3,w3,w3,w3,w3,w3,w3,w3,w3,w3,w2,$fe,13
 
+vol_CharSelBass:	db	w3,w3,w3,w3,w3,w3,w3,w3,w3,w2,w2,w2,w2,w2,w2,w1,$fe,15
+
 ; =================================================================
 ; Arpeggio/Noise sequences
 ; =================================================================
@@ -94,19 +98,22 @@ arp_BurbsTom:		db	22,20,18,16,14,12,10,9,7,6,4,3,2,1,0,$ff
 WaveTable:
 	dw	wave_Pulse
 	dw	wave_OctSquare
+	dw	wave_CharSelBass
 
-wave_Pulse:		db	$ff,$ff,$ff,$ff,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
-wave_OctSquare:	db	$ff,$ff,$ff,$ff,$00,$00,$00,$00,$ff,$ff,$ff,$ff,$00,$00,$00,$00
+wave_Pulse:			db	$ff,$ff,$ff,$ff,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00
+wave_OctSquare:		db	$ff,$ff,$ff,$ff,$00,$00,$00,$00,$ff,$ff,$ff,$ff,$00,$00,$00,$00
+wave_CharSelBass:	db	$9c,$ef,$eb,$74,$10,$13,$69,$ce,$fe,$b7,$41,$01,$36,$9f,$a5,$06
 
 
 ; use $c0 to use the wave buffer
-waveseq_Pulse:		db	0,$ff
-waveseq_Pulse50:	db	2,$ff
+waveseq_Pulse:			db	0,$ff
+waveseq_Pulse50:		db	2,$ff
 
-waveseq_BurbsArp:	db	0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,$ff
-waveseq_BurbsLead:	db	1,1,1,1,1,1,0,$ff
-waveseq_BurbsSlide:	db	1,$ff
-waveseq_BurbsFade:	db	0,$ff
+waveseq_BurbsArp:		db	0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,$ff
+waveseq_BurbsLead:		db	1,1,1,1,1,1,0,$ff
+waveseq_BurbsSlide:		db	1,$ff
+waveseq_BurbsFade:		db	0,$ff
+;waveseq_CharSelBass:	db	2,$ff	; use waveseq_Pulse50 instead
 
 ; =================================================================
 ; Vibrato sequences
@@ -141,6 +148,8 @@ InstrumentTable:
 	dins	BurbsBass
 	dins	BurbsBassL
 	dins	BurbsTom
+	
+	dins	CharSelBass
 
 ; Instrument format: [no reset flag],[voltable id],[arptable id],[wavetable id],[vibtable id]
 ; _ for no table
@@ -161,6 +170,8 @@ ins_BurbsArp		Instrument	0,BurbsArp,Buffer,BurbsArp,_
 ins_BurbsBass		Instrument	0,BurbsBass,Pluck,Pulse,_
 ins_BurbsBassL		Instrument	0,BurbsBassL,Pluck,Pulse,_
 ins_BurbsTom		Instrument	0,BurbsBass,BurbsTom,BurbsSlide,_
+
+ins_CharSelBass		Instrument	0,CharSelBass,Pluck,Pulse50,_
 	
 ; =================================================================
 
@@ -383,4 +394,59 @@ Burbs_CH4:
 	Drum	CHH,1
 	Drum	Kick,1
 	Drum	Snare,2
+	ret
+	
+; =================================================================
+
+PT_CharacterSelect:	dw	CharSel_CH1,CharSel_CH2,CharSel_CH3,CharSel_CH4
+
+CharSel_CH1:
+CharSel_CH2:
+	db	EndChannel
+	
+CharSel_CH3:
+	db	SetInstrument,id_CharSelBass
+	; intro
+	db	B_3,2,A_3,2,F#3,2,E_3,2,D_3,2,A_2,2,SetLoopPoint
+	; loop
+	dbw	CallSection,.block1
+	db	E_3,4,B_2,2,D_3,2,PitchBendUp,4,___,4,PitchBendUp,0
+	dbw	CallSection,.block1
+	db	D_3,4,B_2,2,A_2,4,A#2,2
+	db	GotoLoopPoint
+	
+.block1
+	db	B_2,6,A_2,6,F#2,4,A_2,6,B_2,6,B_2,2,D_3,4,B_2,2
+	ret
+
+CharSel_CH4:
+	; intro
+	Drum	Snare,2
+	rept	5
+	db	fix,2
+	endr
+	; loop
+	db	SetLoopPoint
+	dbw	CallSection,.block1
+	Drum	OHH,2
+	dbw	CallSection,.block1
+	Drum	Snare,2
+	db	GotoLoopPoint
+	
+.block1
+	Drum	Kick,4
+	Drum	CHH,2
+	Drum	Kick,4
+	db	fix,2
+	Drum	Snare,4
+	Drum	CHH,2
+	Drum	OHH,4
+	Drum	Kick,2
+	Drum	CHH,4
+	Drum	Kick,2
+	db	fix,4
+	Drum	CHH,2
+	Drum	Snare,4
+	Drum	CHH,2
+	Drum	Kick,4
 	ret

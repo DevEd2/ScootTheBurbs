@@ -519,6 +519,7 @@ ShowVinesauceSplash:
 	ld	[rROMB0],a
 	xor	a
 	ld	[FadeType],a
+	inc	a
 	call	DS_Init
 	xor	a
 	ldh	[rSCX],a
