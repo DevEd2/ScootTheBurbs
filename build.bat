@@ -27,7 +27,7 @@ echo Building GBS file...
 py makegbs.py
 if errorlevel 1 goto :GBSMakeError
 echo GBS file built.
-rem del /f ScootTheBurbs_GBS.obj ScootTheBurbs_GBS.gbc
+del /f ScootTheBurbs_GBS.obj ScootTheBurbs_GBS.gbc
 echo ** Build finished with no errors **
 goto:eof
 
