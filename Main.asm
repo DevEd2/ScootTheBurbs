@@ -592,9 +592,9 @@ ShowCharSelect:
 	call	LoadMapFull
 	ld	a,1
 	ldh	[rVBK],a
-	; TODO: Fix portrait not fading in properly
-	ld	hl,Portrait_Dummy
-	call	LoadPortrait
+	; TODO: Fix pics not fading in properly
+	ld	hl,Pic_Dummy
+	call	LoadPic
 	
 	ld	a,%10010001
 	ldh	[rLCDC],a
@@ -832,14 +832,14 @@ _CopyTileset1BPPInvert:
 	
 include	"FadeRoutines.asm"
 	
-; Portrait format:
+; Pic format:
 ; $000 - Tileset pointer (two bytes)
 ; $002 - Size of tileset (two bytes)
 ; $004 - Palette pointer (two bytes)
 ; $006 - Map data (280 bytes)
 ; $11e - Attribute data (280 bytes)
 	
-LoadPortrait:	
+LoadPic:	
 	push	hl
 	push	hl
 	inc	hl
@@ -865,7 +865,7 @@ LoadPortrait:
 	ld	a,[hl+]
 	ld	h,[hl]
 	ld	l,a
-	call	LoadPalPortrait
+	call	LoadPalPic
 	
 	pop	hl
 	ld	a,l
@@ -873,15 +873,15 @@ LoadPortrait:
 	inc	hl
 	xor	a
 	ldh	[rVBK],a
-	call	LoadMapPortrait
+	call	LoadMapPic
 	ld	a,1
 	ldh	[rVBK],a
-	call	LoadMapPortrait
+	call	LoadMapPic
 	xor	a
 	ldh	[rVBK],a
 	ret
 
-LoadMapPortrait:
+LoadMapPic:
 	ld	de,$9840
 	ld	bc,$0e14
 .loop
@@ -1025,7 +1025,7 @@ LoadObjPal:
 	ret
 	
 ; Input: hl = palette data
-LoadPalPortrait:
+LoadPalPic:
 	ld	a,1
 	call	LoadBGPalLine
 	ld	a,2
@@ -1603,58 +1603,10 @@ Pal_Vineshroom:
 Pal_CharSelectMain:
 	dw	$7fff,$7e9c,$554a,$2c84
 	
-Pal_CharPortrait_Dummy:
-	; color 1
-	Color	$1f,$00,$00
-	Color	$1f,$00,$00
-	Color	$1f,$00,$00
-	Color	$00,$00,$00
-	; color 2
-	Color	$00,$1f,$00
-	Color	$00,$1f,$00
-	Color	$00,$1f,$00
-	Color	$00,$00,$00
-	; color 3
-	Color	$00,$00,$1f
-	Color	$00,$00,$1f
-	Color	$00,$00,$1f
-	Color	$00,$00,$00
-	; color 4
-	Color 	$00,$1f,$1f
-	Color 	$00,$1f,$1f
-	Color 	$00,$1f,$1f
-	Color	$00,$00,$00
-	; color 5
-	Color	$1f,$00,$1f
-	Color	$1f,$00,$1f
-	Color	$1f,$00,$1f
-	Color	$00,$00,$00
-	; color 6
-	Color	$1f,$1f,$00
-	Color	$1f,$1f,$00
-	Color	$1f,$1f,$00
-	Color	$00,$00,$00
-	; color7
-	Color	$1f,$1f,$1f
-	Color	$1f,$1f,$1f
-	Color	$1f,$1f,$1f
-	Color	$00,$00,$00
-
-	dw	$7c1f,$7c1f,$7c1f,$0000
-	dw	$001f,$001f,$001f,$0000
-	dw	$7c1f,$7c1f,$7c1f,$7c1f
-	dw	$7c1f,$7c1f,$7c1f,$7c1f
-	dw	$7c1f,$7c1f,$7c1f,$7c1f
-	dw	$7c1f,$7c1f,$7c1f,$7c1f
-	dw	$7c1f,$7c1f,$7c1f,$7c1f
-	
 CharSelectTiles:	incbin	"GFX/CharSelectTiles.bin"
 CharSelectTiles_End
 	
 CharSelectMap:		incbin	"GFX/CharSelectMap.bin"
-
-DummyFont			incbin	"GFX/DummyFont.bin"
-DummyFont_End
 
 TitleMap:	; placeholder for now
 ;		 ####################
@@ -1682,40 +1634,7 @@ TitleMap:	; placeholder for now
 ; Character select pics
 ; ================================================================
 
-Portrait_Dummy:
-	dw	DummyFont	; tileset pointer
-	dw	DummyFont_End-DummyFont
-	dw	Pal_CharPortrait_Dummy
-.mapdata
-	db	"TEST PIC  TEST PIC  "
-	db	"TEST PIC  TEST PIC  "
-	db	"TEST PIC  TEST PIC  "
-	db	"TEST PIC  TEST PIC  "
-	db	"TEST PIC  TEST PIC  "
-	db	"TEST PIC  TEST PIC  "
-	db	"TEST PIC  TEST PIC  "
-	db	"TEST PIC  TEST PIC  "
-	db	"TEST PIC  TEST PIC  "
-	db	"TEST PIC  TEST PIC  "
-	db	"TEST PIC  TEST PIC  "
-	db	"TEST PIC  TEST PIC  "
-	db	"TEST PIC  TEST PIC  "
-	db	"TEST PIC  TEST PIC  "
-.attrdata
-	db	$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9
-	db	$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a
-	db	$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b
-	db	$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c
-	db	$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d
-	db	$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e
-	db	$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f
-	db	$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9
-	db	$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a
-	db	$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b
-	db	$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c
-	db	$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d
-	db	$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e
-	db	$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f
+Pic_Dummy:	include	"Pics/Dummy.pic"
 	
 ; ================================================================
 ; GBS Header

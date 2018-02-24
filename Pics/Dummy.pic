@@ -1,0 +1,74 @@
+
+	dw	DummyFont	; tileset pointer
+	dw	DummyFont_End-DummyFont
+	dw	Pal_CharPortrait_Dummy
+.mapdata
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+.attrdata
+	db	$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9
+	db	$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a
+	db	$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b
+	db	$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c
+	db	$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d
+	db	$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e
+	db	$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f
+	db	$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9
+	db	$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a
+	db	$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b
+	db	$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c
+	db	$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d
+	db	$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e
+	db	$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f
+
+DummyFont			incbin	"Pics/DummyFont.bin"
+DummyFont_End
+
+Pal_CharPortrait_Dummy:
+	; color 1
+	Color	$1f,$00,$00
+	Color	$1f,$00,$00
+	Color	$1f,$00,$00
+	Color	$00,$00,$00
+	; color 2
+	Color	$00,$1f,$00
+	Color	$00,$1f,$00
+	Color	$00,$1f,$00
+	Color	$00,$00,$00
+	; color 3
+	Color	$00,$00,$1f
+	Color	$00,$00,$1f
+	Color	$00,$00,$1f
+	Color	$00,$00,$00
+	; color 4
+	Color 	$00,$1f,$1f
+	Color 	$00,$1f,$1f
+	Color 	$00,$1f,$1f
+	Color	$00,$00,$00
+	; color 5
+	Color	$1f,$00,$1f
+	Color	$1f,$00,$1f
+	Color	$1f,$00,$1f
+	Color	$00,$00,$00
+	; color 6
+	Color	$1f,$1f,$00
+	Color	$1f,$1f,$00
+	Color	$1f,$1f,$00
+	Color	$00,$00,$00
+	; color 7
+	Color	$1f,$1f,$1f
+	Color	$1f,$1f,$1f
+	Color	$1f,$1f,$1f
+	Color	$00,$00,$00
