@@ -47,6 +47,21 @@ CopyCompressedTileset:	macro
 	call	RNC_Unpack
 	endm
 	
+; Defines a palette color:
+; Usage: Color [red],[green],[blue]
+Color:	macro
+	if(\1 > $1f)
+		fail "Red value cannot exceed $1f"
+	endc
+	if(\2 > $1f)
+		fail "Green value cannot exceed $1f"
+	endc
+	if(\3 > $1f)
+		fail "Blue value cannot exceed $1f"
+	endc
+	dw	\1+(\2<<5)+(\3<<10)
+	endm
+	
 LoadSprite:			macro
 	ld	hl,\1
 	ld	de,\2

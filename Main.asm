@@ -592,6 +592,7 @@ ShowCharSelect:
 	call	LoadMapFull
 	ld	a,1
 	ldh	[rVBK],a
+	; TODO: Fix portrait not fading in properly
 	ld	hl,Portrait_Dummy
 	call	LoadPortrait
 	
@@ -1603,8 +1604,44 @@ Pal_CharSelectMain:
 	dw	$7fff,$7e9c,$554a,$2c84
 	
 Pal_CharPortrait_Dummy:
+	; color 1
+	Color	$1f,$00,$00
+	Color	$1f,$00,$00
+	Color	$1f,$00,$00
+	Color	$00,$00,$00
+	; color 2
+	Color	$00,$1f,$00
+	Color	$00,$1f,$00
+	Color	$00,$1f,$00
+	Color	$00,$00,$00
+	; color 3
+	Color	$00,$00,$1f
+	Color	$00,$00,$1f
+	Color	$00,$00,$1f
+	Color	$00,$00,$00
+	; color 4
+	Color 	$00,$1f,$1f
+	Color 	$00,$1f,$1f
+	Color 	$00,$1f,$1f
+	Color	$00,$00,$00
+	; color 5
+	Color	$1f,$00,$1f
+	Color	$1f,$00,$1f
+	Color	$1f,$00,$1f
+	Color	$00,$00,$00
+	; color 6
+	Color	$1f,$1f,$00
+	Color	$1f,$1f,$00
+	Color	$1f,$1f,$00
+	Color	$00,$00,$00
+	; color7
+	Color	$1f,$1f,$1f
+	Color	$1f,$1f,$1f
+	Color	$1f,$1f,$1f
+	Color	$00,$00,$00
+
 	dw	$7c1f,$7c1f,$7c1f,$0000
-	dw	$7c1f,$7c1f,$7c1f,$7c1f
+	dw	$001f,$001f,$001f,$0000
 	dw	$7c1f,$7c1f,$7c1f,$7c1f
 	dw	$7c1f,$7c1f,$7c1f,$7c1f
 	dw	$7c1f,$7c1f,$7c1f,$7c1f
@@ -1665,20 +1702,20 @@ Portrait_Dummy:
 	db	"TEST PIC  TEST PIC  "
 	db	"TEST PIC  TEST PIC  "
 .attrdata
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
-	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9
+	db	$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a
+	db	$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b
+	db	$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c
+	db	$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d
+	db	$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e
+	db	$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f
+	db	$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9,$9
+	db	$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a,$a
+	db	$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b,$b
+	db	$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c,$c
+	db	$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d,$d
+	db	$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e,$e
+	db	$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f,$f
 	
 ; ================================================================
 ; GBS Header

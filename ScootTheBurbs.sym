@@ -52,12 +52,12 @@
 00:0D3E LoadObjPalLine
 00:0DB8 MetaspriteToOAM
 00:088D RGBG_SimpleFadeOut
-00:2D25 TitleMap
-00:2325 CharSelectTiles_End
-00:20D5 CharSelectTiles
-00:2325 CharSelectMap
+00:2D5D TitleMap
+00:235D CharSelectTiles_End
+00:210D CharSelectTiles
+00:235D CharSelectMap
 00:0C5A LoadMapFull
-00:2E8D Portrait_Dummy
+00:2EC5 Portrait_Dummy
 00:0BED LoadPortrait
 00:2095 Pal_CharSelectMain
 00:08C0 RGBG_SimpleFadeOut.black1
@@ -69,7 +69,7 @@
 00:0901 RGBG_SimpleFadeOut.black2
 00:090A RGBG_SimpleFadeOut.skip2
 00:0897 RGBG_SimpleFadeOut.loop1
-00:30C3 DevSound
+00:30FB DevSound
 00:088F RGBG_SimpleFadeOut.loop0
 00:094A RGBG_InitComplexFadeBkg.readpalsloop
 00:0988 RGBG_InitComplexFadeBkg.calcdeltasloop
@@ -114,8 +114,8 @@
 00:14F7 ErrorMessageTable.invalidCharID
 00:150C ErrorMessageTable.spriteOver
 00:151E ErrorMessageTable.frameOver
-00:2725 DummyFont
-00:2D25 DummyFont_End
+00:275D DummyFont
+00:2D5D DummyFont_End
 00:209D Pal_CharPortrait_Dummy
 00:0B8E RGBG_RunComplexFadeObj
 01:4000 DS_Init
