@@ -54,6 +54,8 @@ vol_Snare:			db	$ff,$d1
 vol_OHH:			db	$ff,$84
 vol_CymbQ:			db	$ff,$a6
 vol_CymbL:			db	$ff,$f3
+vol_Tom:			db	$ff,$c1
+vol_Tink:			db	$ff,$51
 
 vol_BurbsLeadC:		db	13,12,12,12,12,12,11,$fe,6
 vol_BurbsFadeC:		db	8,8,8,8,8,8,8,8,8,8,7,7,7,6,6,6,6,6,6,5,5,5,5,5,4,4,4,3,3,3,3,3,3,2,2,2,1,1,1,1,1,0,$ff,0
@@ -72,6 +74,7 @@ vol_CharSelLead4:	db	4,$fd,$ff,$42
 vol_CharSelLead2:	db	2,$fd,$ff,$22
 vol_CharSelLead1:	db	1,$fd,$ff,$12
 vol_CharSelLeadC:	db	12,$fd,$ff,$c2
+vol_CharSelArp:		db	$ff,$b3
 
 ; =================================================================
 ; Arpeggio/Noise sequences
@@ -92,11 +95,12 @@ arp_Pluck:			db	12,0,$ff
 arp_Kick:			db	$a0,$9a,$a5,$fe,2
 arp_Snare:			db	s7+$9d,s7+$97,s7+$94,$a3,$fe,3
 arp_Hat:			db	$a9,$ab,$fe,1
+arp_Tom:			db	22,20,18,16,14,12,10,9,7,6,4,3,2,1,0,$ff
+arp_Tink:			db	128+A#7,128+A_7,$fe,1
 
 arp_BurbsSlide1:	db	0,0,0,0,2,2,2,2,4,4,4,4,6,6,6,6,$ff
 arp_BurbsSlide2:	db	0,0,0,0,2,2,2,2,3,3,3,3,5,5,5,5,$ff
 arp_BurbsHack:		db	0,$fe,0
-arp_BurbsTom:		db	22,20,18,16,14,12,10,9,7,6,4,3,2,1,0,$ff
 
 ; =================================================================
 ; Pulse/Wave sequences
@@ -120,6 +124,7 @@ waveseq_BurbsArp:		db	0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,$ff
 waveseq_BurbsLead:		db	1,1,1,1,1,1,0,$ff
 waveseq_BurbsSlide:		db	1,$ff
 waveseq_BurbsFade:		db	0,$ff
+waveseq_CharSelArp:		db	0,0,1,1,1,2,2,2,3,3,3,2,2,2,1,1,1,0,$fe,0
 
 ;waveseq_CharSelBass:	db	2,$ff	; use waveseq_Pulse50 instead
 waveseq_CharSelLead:	db	0,1,2,$ff
@@ -147,6 +152,8 @@ InstrumentTable:
 	dins	OHH
 	dins	CymbQ
 	dins	CymbL
+	dins	Tom
+	dins	Tink
 	
 	dins	BurbsLeadC
 	dins	BurbsFadeC
@@ -165,6 +172,7 @@ InstrumentTable:
 	dins	CharSelLead2
 	dins	CharSelLead1
 	dins	CharSelLeadC
+	dins	CharSelArp
 
 ; Instrument format: [no reset flag],[voltable id],[arptable id],[wavetable id],[vibtable id]
 ; _ for no table
@@ -175,6 +183,8 @@ ins_CHH:			Instrument	0,Kick,Hat,_,_
 ins_OHH:			Instrument	0,OHH,Hat,_,_
 ins_CymbQ:			Instrument	0,CymbQ,Hat,_,_
 ins_CymbL:			Instrument	0,CymbL,Hat,_,_
+ins_Tom:			Instrument	0,Tom,Tom,Pulse50,_
+ins_Tink:			Instrument	0,Tink,Tink,Pulse50,_
 
 ins_BurbsLeadC		Instrument	0,BurbsLeadC,_,Pulse50,BurbsLeadC
 ins_BurbsFadeC		Instrument	0,BurbsFadeC,_,Pulse50,BurbsLeadC
@@ -184,7 +194,7 @@ ins_BurbsFade		Instrument	0,BurbsFade,_,BurbsFade,BurbsFade
 ins_BurbsArp		Instrument	0,BurbsArp,Buffer,BurbsArp,_
 ins_BurbsBass		Instrument	0,BurbsBass,Pluck,Pulse,_
 ins_BurbsBassL		Instrument	0,BurbsBassL,Pluck,Pulse,_
-ins_BurbsTom		Instrument	0,BurbsBass,BurbsTom,BurbsSlide,_
+ins_BurbsTom		Instrument	0,BurbsBass,Tom,BurbsSlide,_
 
 ins_CharSelBass		Instrument	0,CharSelBass,Pluck,Pulse50,_
 ins_CharSelLead		Instrument	0,CharSelLead,_,CharSelLead,_
@@ -193,6 +203,7 @@ ins_CharSelLead4	Instrument	0,CharSelLead4,_,CharSelLead,_
 ins_CharSelLead2	Instrument	0,CharSelLead2,_,CharSelLead,_
 ins_CharSelLead1	Instrument	0,CharSelLead1,_,CharSelLead,_
 ins_CharSelLeadC	Instrument	0,CharSelLeadC,_,CharSelLead,_
+ins_CharSelArp		Instrument	0,CharSelArp,Buffer,CharSelArp,_
 	
 ; =================================================================
 
@@ -459,10 +470,40 @@ CharSel_CH1:
 
 CharSel_CH2:
 	; intro
-	
+	db	SetInstrument,id_Tom
+	db	fix+11,2
+	db	fix+11,2
+	db	fix+11,2
+	db	fix+7,2
+	db	fix+7,2
+	db	fix+7,2
 	db	SetLoopPoint
 	; loop
-	db	EndChannel
+	dbw	CallSection,.block1
+	dbw	CallSection,.block1
+	dbw	CallSection,.block1
+	db	SetInstrument,id_Tink,fix,4,fix,2
+	db	SetInstrument,id_CharSelArp,Arp,1,$37,B_3,6
+	Drum	Tom,4
+	db	SetInstrument,id_Tink,fix,2
+	db	SetInstrument,id_CharSelArp,Arp,1,$47,D_4,6
+	dbw	CallSection,.block1
+	dbw	CallSection,.block1
+	dbw	CallSection,.block1
+	db	SetInstrument,id_Tink,fix,4,fix,2
+	db	SetInstrument,id_CharSelArp,Arp,1,$37,B_3,6
+	Drum	Tom,4
+	db	SetInstrument,id_Tink,fix,2
+	db	SetInstrument,id_CharSelArp,Arp,1,$47,A_3,6
+	db	GotoLoopPoint
+	
+.block1
+	db	SetInstrument,id_Tink,fix,4,fix,2
+	db	SetInstrument,id_CharSelArp,Arp,1,$37,B_3,6
+	Drum	Tom,4
+	db	SetInstrument,id_Tink,fix,2
+	db	SetInstrument,id_CharSelArp,Arp,1,$37,B_3,6
+	ret
 	
 CharSel_CH3:
 	db	SetInstrument,id_CharSelBass
