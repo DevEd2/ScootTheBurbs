@@ -66,6 +66,13 @@ vol_BurbsBassL:		db	w3,w3,w3,w3,w3,w3,w3,w3,w3,w3,w3,w3,w3,w2,$fe,13
 
 vol_CharSelBass:	db	w3,w3,w3,w3,w3,w3,w3,w3,w3,w2,w2,w2,w2,w2,w2,w1,$fe,15
 
+vol_CharSelLead:	db	15,$fd,$ff,$f2
+vol_CharSelLead8:	db	8,$fd,$ff,$82
+vol_CharSelLead4:	db	4,$fd,$ff,$42
+vol_CharSelLead2:	db	2,$fd,$ff,$22
+vol_CharSelLead1:	db	1,$fd,$ff,$12
+vol_CharSelLeadC:	db	12,$fd,$ff,$c2
+
 ; =================================================================
 ; Arpeggio/Noise sequences
 ; =================================================================
@@ -113,7 +120,9 @@ waveseq_BurbsArp:		db	0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,$ff
 waveseq_BurbsLead:		db	1,1,1,1,1,1,0,$ff
 waveseq_BurbsSlide:		db	1,$ff
 waveseq_BurbsFade:		db	0,$ff
+
 ;waveseq_CharSelBass:	db	2,$ff	; use waveseq_Pulse50 instead
+waveseq_CharSelLead:	db	0,1,2,$ff
 
 ; =================================================================
 ; Vibrato sequences
@@ -150,6 +159,12 @@ InstrumentTable:
 	dins	BurbsTom
 	
 	dins	CharSelBass
+	dins	CharSelLead
+	dins	CharSelLead8
+	dins	CharSelLead4
+	dins	CharSelLead2
+	dins	CharSelLead1
+	dins	CharSelLeadC
 
 ; Instrument format: [no reset flag],[voltable id],[arptable id],[wavetable id],[vibtable id]
 ; _ for no table
@@ -172,6 +187,12 @@ ins_BurbsBassL		Instrument	0,BurbsBassL,Pluck,Pulse,_
 ins_BurbsTom		Instrument	0,BurbsBass,BurbsTom,BurbsSlide,_
 
 ins_CharSelBass		Instrument	0,CharSelBass,Pluck,Pulse50,_
+ins_CharSelLead		Instrument	0,CharSelLead,_,CharSelLead,_
+ins_CharSelLead8	Instrument	0,CharSelLead8,_,CharSelLead,_
+ins_CharSelLead4	Instrument	0,CharSelLead4,_,CharSelLead,_
+ins_CharSelLead2	Instrument	0,CharSelLead2,_,CharSelLead,_
+ins_CharSelLead1	Instrument	0,CharSelLead1,_,CharSelLead,_
+ins_CharSelLeadC	Instrument	0,CharSelLeadC,_,CharSelLead,_
 	
 ; =================================================================
 
@@ -395,13 +416,52 @@ Burbs_CH4:
 	Drum	Kick,1
 	Drum	Snare,2
 	ret
-	
 ; =================================================================
 
 PT_CharacterSelect:	dw	CharSel_CH1,CharSel_CH2,CharSel_CH3,CharSel_CH4
 
 CharSel_CH1:
+	; intro
+	db	SetInstrument,id_CharSelLead,B_4,2,D_5,2,E_5,2,F#5,2,A_5,2,F#5,2,SetLoopPoint	
+	; loop
+	dbw	CallSection,.block1
+	db	SetInstrument,id_CharSelLead8
+	dbw	CallSection,.block1
+	db	SetInstrument,id_CharSelLead4
+	dbw	CallSection,.block1
+	db	SetInstrument,id_CharSelLead2
+	dbw	CallSection,.block1
+	db	SetInstrument,id_CharSelLead1
+	dbw	CallSection,.block1
+	db	rest,30
+	db	SetInstrument,id_CharSelLeadC
+	db	A_4,2,rest,2,SetInstrument,id_CharSelLead,A_4,2
+	
+	dbw	CallSection,.block2
+	db	SetInstrument,id_CharSelLead8
+	dbw	CallSection,.block2
+	db	SetInstrument,id_CharSelLead4
+	dbw	CallSection,.block2
+	db	SetInstrument,id_CharSelLead2
+	dbw	CallSection,.block2
+	db	SetInstrument,id_CharSelLead1
+	dbw	CallSection,.block2
+	db	SetInstrument,id_CharSelLead
+	db	rest,66
+	db	GotoLoopPoint
+	
+.block1
+	db	B_5,6,PitchBendDown,$10,rel,6,PitchBendDown,0
+	ret
+.block2
+	db	B_4,3,rest,3
+	ret
+
 CharSel_CH2:
+	; intro
+	
+	db	SetLoopPoint
+	; loop
 	db	EndChannel
 	
 CharSel_CH3:
@@ -450,3 +510,4 @@ CharSel_CH4:
 	Drum	CHH,2
 	Drum	Kick,4
 	ret
+; =================================================================
