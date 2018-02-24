@@ -519,7 +519,6 @@ ShowVinesauceSplash:
 	ld	[rROMB0],a
 	xor	a
 	ld	[FadeType],a
-	inc	a
 	call	DS_Init
 	xor	a
 	ldh	[rSCX],a
@@ -528,6 +527,9 @@ ShowVinesauceSplash:
 	ldh	[rLCDC],a
 	
 	Pal_FadeToPal	Pal_Grayscale,1,8
+	ld	a,1
+	ld	hl,Pal_Grayscale
+	call	LoadBGPalLine
 		
 	jr	ShowTitleScreen
 	
@@ -556,9 +558,55 @@ Sprite_Vineshroom_End
 ShowTitleScreen::
 	call	DS_Play
 	halt
-	jr	ShowTitleScreen
-		
-Packet_PrinterDetect:	db    7,$88,$33,$0f,$00,$00,$00,$0f,$00
+	
+	call	CheckInput
+	ld	a,[sys_btnPress]
+	bit	btnStart,a
+	jr	z,ShowTitleScreen
+	
+.exitTitle
+	call	DS_Stop
+	ld	a,Bank(FXHammer)
+	ld	[rROMB0],a
+	ld	a,SFX_MenuSelect
+	call	FXHammer_Trig
+	ld	b,30
+.loop1
+	push	bc
+	call	FXHammer_Update
+	halt
+	pop	bc
+	dec	b
+	jr	nz,.loop1
+	
+	ld	a,1
+	ld	[RGBG_fade_to_color],a
+	call	RGBG_SimpleFadeOut
+	WaitForVBlank
+	xor	a
+	ldh	[rLCDC],a
+
+ShowCharSelect:	
+	CopyTileset	CharSelectTiles,0,(CharSelectTiles_End-CharSelectTiles)/16
+	ld	hl,CharSelectMap
+	call	LoadMapFull
+	ld	a,1
+	ldh	[rVBK],a
+	ld	hl,Portrait_Dummy
+	call	LoadPortrait
+	
+	ld	a,%10010001
+	ldh	[rLCDC],a
+	Pal_FadeToPal	Pal_CharSelectMain,1,8
+
+	ld	a,1
+	ld	[rROMB0],a
+	call	DS_Init
+	
+CharSelectLoop:
+	call	DS_Play
+	halt
+	jr	CharSelectLoop
 	
 ; ================================================================
 ; serial routines
@@ -782,6 +830,79 @@ _CopyTileset1BPPInvert:
 	ret
 	
 include	"FadeRoutines.asm"
+	
+; Portrait format:
+; $000 - Tileset pointer (two bytes)
+; $002 - Size of tileset (two bytes)
+; $004 - Palette pointer (two bytes)
+; $006 - Map data (280 bytes)
+; $11e - Attribute data (280 bytes)
+	
+LoadPortrait:	
+	push	hl
+	push	hl
+	inc	hl
+	inc	hl
+	ld	a,[hl+]
+	ld	b,[hl]
+	ld	c,a
+	ld	de,$8000
+	pop	hl
+	ld	a,[hl+]
+	ld	h,[hl]
+	ld	l,a
+	call	_CopyTilesetSafe
+	
+	pop	hl
+	ld	a,l
+	add	4
+	ld	l,a
+	jr	nc,.nocarry
+	inc	h
+.nocarry
+	push	hl
+	ld	a,[hl+]
+	ld	h,[hl]
+	ld	l,a
+	call	LoadPalPortrait
+	
+	pop	hl
+	ld	a,l
+	inc	hl
+	inc	hl
+	xor	a
+	ldh	[rVBK],a
+	call	LoadMapPortrait
+	ld	a,1
+	ldh	[rVBK],a
+	call	LoadMapPortrait
+	xor	a
+	ldh	[rVBK],a
+	ret
+
+LoadMapPortrait:
+	ld	de,$9840
+	ld	bc,$0e14
+.loop
+	ldh	a,[rSTAT]
+	and	2
+	jr	nz,.loop
+	ld	a,[hl+]						; get tile ID
+	ld	[de],a						; copy to BG map
+	inc	de							; go to next tile
+	dec	c
+	jr	nz,.loop			; loop until current row has been completely copied
+	ld	c,$14						; reset C
+	ld	a,e
+	add	$c							; go to next row
+	jr	nc,.continue				; if carry isn't set, continue
+	inc	d
+.continue
+	ld	e,a
+	dec	b
+	jr	nz,.loop			; loop until all rows have been copied
+	ret
+
 
 LoadMap:
 	ld	de,_SCRN0					; BG map address in VRAM
@@ -801,6 +922,19 @@ LoadMap_loop:
 	ld	e,a
 	dec	b
 	jr	nz,LoadMap_loop				; loop until all rows have been copied
+	ret
+	
+LoadMapFull:
+	ld	de,_SCRN0
+	ld	bc,$400
+.loop
+	ld	a,[hl+]
+	ld	[de],a
+	inc	de
+	dec	bc
+	ld	a,b
+	or	c
+	jr	nz,.loop
 	ret
 	
 LoadRow:
@@ -887,6 +1021,24 @@ LoadObjPal:
 	call	LoadObjPalLine
 	ld	a,7
 	call	LoadObjPalLine
+	ret
+	
+; Input: hl = palette data
+LoadPalPortrait:
+	ld	a,1
+	call	LoadBGPalLine
+	ld	a,2
+	call	LoadBGPalLine
+	ld	a,3
+	call	LoadBGPalLine
+	ld	a,4
+	call	LoadBGPalLine
+	ld	a,5
+	call	LoadBGPalLine
+	ld	a,6
+	call	LoadBGPalLine
+	ld	a,7
+	call	LoadBGPalLine
 	ret
 	
 ; Input: hl = palette data
@@ -1446,13 +1598,26 @@ Pal_Vinesauce:
 	dw	$7fff,$6e94,$354a,$1cc6
 Pal_Vineshroom:	
 	dw	$7c1f,$7fff,$2778,$4680
-Pal_Sega:
-	dw	$7fff,$7f98,$7f0f,$7d04
+	
+Pal_CharSelectMain:
+	dw	$7fff,$7e9c,$554a,$2c84
+	
+Pal_CharPortrait_Dummy:
+	dw	$7c1f,$7c1f,$7c1f,$0000
+	dw	$7c1f,$7c1f,$7c1f,$7c1f
+	dw	$7c1f,$7c1f,$7c1f,$7c1f
+	dw	$7c1f,$7c1f,$7c1f,$7c1f
+	dw	$7c1f,$7c1f,$7c1f,$7c1f
+	dw	$7c1f,$7c1f,$7c1f,$7c1f
+	dw	$7c1f,$7c1f,$7c1f,$7c1f
 	
 CharSelectTiles:	incbin	"GFX/CharSelectTiles.bin"
 CharSelectTiles_End
 	
 CharSelectMap:		incbin	"GFX/CharSelectMap.bin"
+
+DummyFont			incbin	"GFX/DummyFont.bin"
+DummyFont_End
 
 TitleMap:	; placeholder for now
 ;		 ####################
@@ -1475,6 +1640,45 @@ TitleMap:	; placeholder for now
 	db	"    PRESS START!    "
 	db	"                    "
 ;		 ####################
+
+; ================================================================
+; Character select pics
+; ================================================================
+
+Portrait_Dummy:
+	dw	DummyFont	; tileset pointer
+	dw	DummyFont_End-DummyFont
+	dw	Pal_CharPortrait_Dummy
+.mapdata
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+	db	"TEST PIC  TEST PIC  "
+.attrdata
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
+	db	9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9
 	
 ; ================================================================
 ; GBS Header
