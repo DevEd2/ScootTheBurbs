@@ -923,7 +923,7 @@ LoadMapPic:
 ; temp routine
 LoadMapTitle:
 	ld	de,_SCRN1
-	ld	bc,$414
+	ld	bc,$614
 	jp	LoadMapText_loop
 
 LoadMap:
@@ -1224,6 +1224,7 @@ DoVBlank:
 	
 DoStat:
 	push	af
+	push	hl
 	ld	a,[StatID]
 	add	a
 	ld	hl,StatTable
@@ -1249,6 +1250,7 @@ StatTable:
 StatTable_End
 	
 Stat_None	; because reti nz doesn't exist
+	pop	hl
 	pop	af
 	reti
 	
@@ -1256,7 +1258,6 @@ Stat_WindowTransition:
 	; init
 	push	bc
 	push	de
-	push	hl
 	ld	c,rWX-$ff00
 	ld	a,[WindowTransitionOffset]
 	rra
@@ -1311,9 +1312,9 @@ Stat_WindowTransition:
 	xor	a
 .noOverflow
 	ldh	[rLYC],a
-	pop	hl
 	pop	de
 	pop	bc
+	pop	hl
 	pop	af
 	reti
 	
@@ -1341,7 +1342,6 @@ WindowTransitionLookupTable2:
 Stat_Title:	; TODO: Fix this!
 	push	bc
 	push	de
-	push	hl
 	ldh	a,[rLY]
 	cp	48
 	jr	z,.doGradient
@@ -1375,9 +1375,9 @@ Stat_Title:	; TODO: Fix this!
 	ldh	[rLYC],a
 	ld	a,%11100111
 	ldh	[rLCDC],a
-	pop	hl
 	pop	de
 	pop	bc
+	pop	hl
 	pop	af
 	reti
 	
@@ -1727,6 +1727,8 @@ TitleMap:	; placeholder for now
 	db	"- SCOOT THE BURBS - "
 	db	"Pre-alpha build v0.1"
 	db	"                    "
+	db	" PLACEHOLDER TITLE! "
+	db	"    PRESS START.    "
 ;		 ####################
 
 ; ================================================================
