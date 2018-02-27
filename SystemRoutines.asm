@@ -116,13 +116,13 @@ DrawHexDigit:
 LoadMapText:
 	ld	de,_SCRN0
 	ld	bc,$1214
-.loop
+LoadMapText_loop:
 	ld	a,[hl+]
 	sub 32	
 	ld	[de],a
 	inc	de
 	dec	c
-	jr	nz,.loop
+	jr	nz,LoadMapText_loop
 	ld	c,$14
 	ld	a,e
 	add	$c
@@ -131,5 +131,5 @@ LoadMapText:
 .continue
 	ld	e,a
 	dec	b
-	jr	nz,.loop
+	jr	nz,LoadMapText_loop
 	ret

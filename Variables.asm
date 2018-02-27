@@ -17,6 +17,9 @@ WindowTransitionPos2	ds	1
 WindowBasePos			ds	1
 WindowTransitionOffset	ds	1
 SpritesDisabled			ds	1
+Gradient_CurrentRed		ds	1
+Gradient_CurrentGreen	ds	1
+Gradient_CurrentBlue	ds	1
 
 SECTION	"OAM buffer",WRAM0[$c100]
 OAMBuffer				ds	$100

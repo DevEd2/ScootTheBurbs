@@ -78,6 +78,16 @@ PBit_PaperJam		equ	6
 PBit_BadTem			equ	7
 
 ; ================================================================
+; Error IDs
+; ================================================================
+
+err_Unknown			equ	0
+err_InvalidCharID	equ	1
+err_TooManySprites	equ	2
+err_FrameTimeOver	equ	3
+err_DestOutsideROM	equ	4
+
+; ================================================================
 ; Project-specific constants
 ; ================================================================
 

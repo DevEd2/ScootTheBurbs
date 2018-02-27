@@ -332,13 +332,14 @@ ShowDevsoftSplash:
 	ld	a,176
 	ld	[WindowBasePos],a
 	di
-	ldh	a,[rIE]
-	xor	IEF_LCDC+IEF_TIMER
+	ld	a,IEF_VBLANK+IEF_LCDC
 	ldh	[rIE],a
 	ld	a,%01000000
 	ldh	[rSTAT],a
 	xor	a
 	ldh	[rLYC],a
+	ld	a,1
+	ld	[StatID],a
 	ei
 .scrollLoop
 	WaitForVBlank
@@ -355,8 +356,7 @@ ShowDevsoftSplash:
 	cp	$e0
 	jr	nz,.scrollLoop
 	di
-	ld	a,[rIE]
-	xor	IEF_LCDC
+	ld	a,IEF_VBLANK
 	ldh	[rIE],a
 	xor	a
 	ld	[SpritesDisabled],a
@@ -513,7 +513,7 @@ ShowVinesauceSplash:
 	
 	CopyTileset1BPP	DebugFont,0,97
 	ld	hl,TitleMap
-	call	LoadMapText
+	call	LoadMapTitle
 	
 	ld	a,1
 	ld	[rROMB0],a
@@ -523,15 +523,30 @@ ShowVinesauceSplash:
 	xor	a
 	ldh	[rSCX],a
 	ldh	[rSCY],a
-	ld	a,%10010001
-	ldh	[rLCDC],a
+
 	
-	Pal_FadeToPal	Pal_Grayscale,1,8
+;	Pal_FadeToPal	Pal_Grayscale,1,8
+
+ShowTitleScreen:
+	ld	a,0
+	ld	hl,Pal_Grayscale
+	call	LoadBGPalLine
 	ld	a,1
 	ld	hl,Pal_Grayscale
 	call	LoadBGPalLine
-		
-	jr	ShowTitleScreen
+	ld	a,%11110111
+	ldh	[rLCDC],a
+	di
+	ld	a,IEF_VBLANK;+IEF_LCDC
+	ldh	[rIE],a
+;	ld	a,%01000000
+;	ldh	[rSTAT],a
+;	ld	a,48
+;	ldh	[rLYC],a
+;	ld	a,2
+;	ld	[StatID],a
+	ei
+	jr	TitleLoop
 	
 VinesauceScrollTableY:
 	db	80,80,80,80,80,80,80,80
@@ -555,14 +570,14 @@ Sprite_Vineshroom_End
 
 ; ================================================================
 
-ShowTitleScreen::
+TitleLoop::
+	WaitForVBlank
 	call	DS_Play
-	halt
 	
 	call	CheckInput
 	ld	a,[sys_btnPress]
 	bit	btnStart,a
-	jr	z,ShowTitleScreen
+	jr	z,TitleLoop
 	
 .exitTitle
 	call	DS_Stop
@@ -574,7 +589,7 @@ ShowTitleScreen::
 .loop1
 	push	bc
 	call	FXHammer_Update
-	halt
+	WaitForVBlank
 	pop	bc
 	dec	b
 	jr	nz,.loop1
@@ -586,7 +601,7 @@ ShowTitleScreen::
 	xor	a
 	ldh	[rLCDC],a
 
-ShowCharSelect:	
+ShowCharSelect:
 	CopyTileset	CharSelectTiles,0,(CharSelectTiles_End-CharSelectTiles)/16
 	ld	hl,CharSelectMap
 	call	LoadMapFull
@@ -606,7 +621,7 @@ ShowCharSelect:
 	
 CharSelectLoop:
 	call	DS_Play
-	halt
+	WaitForVBlank
 	jr	CharSelectLoop
 	
 ; ================================================================
@@ -904,6 +919,12 @@ LoadMapPic:
 	jr	nz,.loop			; loop until all rows have been copied
 	ret
 
+	
+; temp routine
+LoadMapTitle:
+	ld	de,_SCRN1
+	ld	bc,$414
+	jp	LoadMapText_loop
 
 LoadMap:
 	ld	de,_SCRN0					; BG map address in VRAM
@@ -1041,6 +1062,20 @@ LoadPalPic:
 	ld	a,7
 	call	LoadBGPalLine
 	ret
+
+LoadBGColor:
+	swap	a	; \  multiply
+	rrca		; /  palette by 8
+	or	$80		; auto increment
+	push	af
+	RGBG_WaitForVRAM
+	pop	af
+	ld	[rBCPS],a
+	ld	a,d
+	ld	[rBCPD],a
+	ld	a,e
+	ld	[rBCPD],a
+	ret
 	
 ; Input: hl = palette data
 LoadBGPalLine:
@@ -1129,7 +1164,7 @@ CopyDMARoutine:
 	jr	nz,.loop2
 	ld	a,$c2
 	ld	[c],a
-	ret	
+	ret
 
 ClearOAM:
 	xor	a
@@ -1188,16 +1223,40 @@ DoVBlank:
 	reti
 	
 DoStat:
+	push	af
 	ld	a,[StatID]
-	and	a
-	jr	nz,.reti
-	dec	a
-	jr	nz,Stat_WindowTransition
-.reti	; because reti nz doesn't exist
+	add	a
+	ld	hl,StatTable
+	add	l
+	ld	l,a
+	jr	nc,.nocarry
+	inc	h
+.nocarry
+	ld	a,[hl+]
+	ld	h,[hl]
+	ld	l,a
+	bit	7,h
+	jr	z,.noerr
+	ld	a,err_DestOutsideROM
+	rst	$30	; show error message
+.noerr
+	jp	hl
+	
+StatTable:
+	dw	Stat_None
+	dw	Stat_WindowTransition
+	dw	Stat_Title
+StatTable_End
+	
+Stat_None	; because reti nz doesn't exist
+	pop	af
 	reti
 	
 Stat_WindowTransition:
 	; init
+	push	bc
+	push	de
+	push	hl
 	ld	c,rWX-$ff00
 	ld	a,[WindowTransitionOffset]
 	rra
@@ -1252,6 +1311,10 @@ Stat_WindowTransition:
 	xor	a
 .noOverflow
 	ldh	[rLYC],a
+	pop	hl
+	pop	de
+	pop	bc
+	pop	af
 	reti
 	
 WindowTransitionLookupTable1:
@@ -1274,6 +1337,49 @@ WindowTransitionLookupTable2:
 		db	-8,-8,-8,-8,-8,-8,-8,-8,-7,-7,-7,-7,-7,-6,-6,-6
 		db	-6,-5,-5,-5,-4,-4,-4,-3,-3,-3,-2,-2,-2,-1,-1,0
 	endr
+	
+Stat_Title:	; TODO: Fix this!
+	push	bc
+	push	de
+	push	hl
+	ldh	a,[rLY]
+	cp	48
+	jr	z,.doGradient
+	ld	a,%10000111
+	ldh	[rLCDC],a
+	ld	a,112
+	ldh	[rLYC],a
+	reti
+.doGradient
+	ld	hl,Pal_VineshroomDark
+	ld	a,[hl+]
+	ld	e,[hl]
+	ld	d,a
+	call	RGBG_ConvertColor24to15
+	ld	b,a
+	ld	a,[Gradient_CurrentBlue]
+	inc	a
+	ld	[Gradient_CurrentBlue],a
+	ld	h,a
+	ld	a,b
+	call	RGBG_ConvertColor15to24
+	xor	a
+	call	LoadBGColor
+	ldh	a,[rLYC]
+	cp	142
+	jr	nz,.done
+	add	2
+	ldh	[rLYC],a
+.done
+	ld	a,48
+	ldh	[rLYC],a
+	ld	a,%11100111
+	ldh	[rLCDC],a
+	pop	hl
+	pop	de
+	pop	bc
+	pop	af
+	reti
 	
 ; ================================================================
 ; Switching CPU speeds on the GBC
@@ -1555,11 +1661,13 @@ ErrorMessageTable:
 	dw	.invalidCharID
 	dw	.spriteOver
 	dw	.frameOver
+	dw	.destOutsideROM
 	
 .unknown		db	"Unknown error",0
 .invalidCharID	db	"Invalid character ID",0
 .spriteOver		db	"Too many sprites!",0
 .frameOver		db	"Frame time exceeded",0
+.destOutsideROM	db	"JP dest. outside ROM",0
 
 ; ================================================================
 ; Graphics data
@@ -1599,6 +1707,11 @@ Pal_Vinesauce:
 	dw	$7fff,$6e94,$354a,$1cc6
 Pal_Vineshroom:	
 	dw	$7c1f,$7fff,$2778,$4680
+Pal_VineshroomDark:
+	Color	0,0,0		; bg color
+	Color	15,15,15	; white
+	Color	12,13,4		; light shade
+	Color	0,10,8		; dark shade
 	
 Pal_CharSelectMain:
 	dw	$7fff,$7e9c,$554a,$2c84
@@ -1613,20 +1726,6 @@ TitleMap:	; placeholder for now
 	db	"                    "
 	db	"- SCOOT THE BURBS - "
 	db	"Pre-alpha build v0.1"
-	db	"                    "
-	db	"                    "
-	db	"                    "
-	db	"                    "
-	db	"                    "
-	db	"                    "
-	db	"                    "
-	db	"                    "
-	db	"                    "
-	db	"                    "
-	db	"                    "
-	db	"                    "
-	db	"                    "
-	db	"    PRESS START!    "
 	db	"                    "
 ;		 ####################
 
