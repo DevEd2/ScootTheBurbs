@@ -606,6 +606,7 @@ ShowCharSelect:
 	ld	hl,CharSelectMap
 	call	LoadMapFull
 	ld	a,1
+	ld	[SpritesDisabled],a
 	ldh	[rVBK],a
 	; TODO: Fix pics not fading in properly
 	ld	hl,Pic_Dummy
@@ -620,9 +621,103 @@ ShowCharSelect:
 	call	DS_Init
 	
 CharSelectLoop:
+	ld	hl,rROMB0
+	ld	[hl],1
 	call	DS_Play
+	ld	[hl],2
+	call	FXHammer_Update
+	
+	call	CheckInput
+	ld	a,[sys_btnPress]
+	bit	btnA,a
+	jr	nz,.select
+	bit	btnB,a
+	jr	nz,.back
+	bit	btnStart,a
+	jr	nz,.select
+	bit	btnLeft,a
+	jr	nz,.prev
+	bit	btnRight,a
+	jr	z,.continue
+.next
+	ld	a,SFX_MenuCursor
+	call	FXHammer_Trig
+	ld	hl,CharSel_CharID
+	inc	[hl]
+	jr	.continue
+.prev
+	ld	a,SFX_MenuCursor
+	call	FXHammer_Trig
+	ld	hl,CharSel_CharID
+	dec	[hl]
+	jr	.continue
+.select
+	ld	[hl],1		; hl should still be ROM bank select
+	call	DS_Stop	; stop music
+	; mute all channels to prevent notes from sustaining (why does it do this?)
+	xor	a
+	ldh	[rNR12],a
+	ldh	[rNR22],a
+	ldh	[rNR30],a
+	ldh	[rNR42],a
+	or	$80
+	ldh	[rNR14],a
+	ldh	[rNR24],a
+	ldh	[rNR44],a
+	ld	[hl],0
+	ld	a,SFX_MenuSelect
+	call	FXHammer_Trig
+	ld	b,45
+.loop
+	push	bc
+	call	FXHammer_Update
+	pop	bc
 	WaitForVBlank
-	jr	CharSelectLoop
+	dec	b
+	jr	nz,.loop
+	di
+	ld	a,IEF_TIMER
+	ldh	[rIE],a
+	ei
+	; init CH3 to prevent samples from being too quiet (isn't DS_Stop supposed to take care of this???)
+	ld	a,$80
+	ldh	[rNR30],a
+	ld	a,%00100000
+	ldh	[rNR32],a
+	ld	a,[CharSel_CharID]
+	and	$3
+	call	PlaySample
+	jr	.sampleLoop
+	
+
+.back
+	ld	a,SFX_MenuBack
+	call	FXHammer_Trig
+.continue
+	WaitForVBlank
+	jp	CharSelectLoop
+
+.sampleLoop
+	halt
+	ld	a,[SamplePlaying]
+	and	a
+	jr	nz,.sampleLoop
+.samplebreak
+	di
+	ld	a,IEF_VBLANK
+	ldh	[rIE],a
+	ei
+	ld	a,1
+	ld	[RGBG_fade_to_color],a
+	call	RGBG_SimpleFadeOut
+ShowLevelSelect:
+	WaitForVBlank
+	xor	a
+	ldh	[rLCDC],a
+	
+.loop
+	halt
+	jr	.loop
 	
 ; ================================================================
 ; serial routines
@@ -1215,9 +1310,6 @@ DoVBlank:
 	and	a
 	call	z,_OAM_DMA
 	
-;	ldh	a,[sys_GameMode]
-;	and	a
-;	jr	nz,.done
 .done
 	pop	af
 	reti
@@ -1597,9 +1689,15 @@ PlaySample:
 	ret
 
 SampleTable:
-;	dw	.sega
+	dw	.vinnysel
+	dw	.joelsel
+	dw	.thiccsel
+	dw	.sonicsel
 	
-;.sega	Sample	Sample_Sega,	Sample_SegaEnd-Sample_Sega,		Bank(Sample_Sega)
+.vinnysel	Sample	Sample_VinnySelect,	Sample_VinnySelectEnd-Sample_VinnySelect,	Bank(Sample_VinnySelect)
+.joelsel	Sample	Sample_JoelSelect,	Sample_JoelSelectEnd-Sample_JoelSelect,		Bank(Sample_JoelSelect)
+.thiccsel	Sample	Sample_ThiccSelect,	Sample_ThiccSelectEnd-Sample_ThiccSelect,	Bank(Sample_ThiccSelect)
+.sonicsel	Sample	Sample_SonicSelect,	Sample_SonicSelectEnd-Sample_SonicSelect,	Bank(Sample_SonicSelect)
 
 ; =====================
 ; Error message routine
@@ -1749,5 +1847,29 @@ endc
 ; Other data banks
 ; ================================================================
 
-include	"DevSound.asm"	; music
 include	"FXHammer.asm"	; SFX
+include	"DevSound.asm"	; music
+
+; ================================================================
+; Sample banks
+; ================================================================
+
+section	"Sample bank 1",romx,bank[3]
+
+Sample_VinnySelect:	incbin	"Samples/CharSel_Vinny.aud"
+Sample_VinnySelectEnd
+
+section	"Sample bank 2",romx,bank[4]
+
+Sample_JoelSelect:	incbin	"Samples/CharSel_Joel.aud"
+Sample_JoelSelectEnd
+
+section	"Sample bank 3",romx,bank[5]
+
+Sample_ThiccSelect:	incbin	"Samples/CharSel_HeThicc.aud"
+Sample_ThiccSelectEnd
+
+section	"Sample bank 4",romx,bank[6]
+
+Sample_SonicSelect:	incbin	"Samples/CharSel_Sonic.aud"
+Sample_SonicSelectEnd

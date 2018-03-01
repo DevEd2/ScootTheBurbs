@@ -174,8 +174,10 @@ RGBG_SimpleFadeOut::
 	jp	nz,.loop1	; not yet
 	
 	ld	a,Bank(DevSound)
+	ld	[rROMB0],a
 	call	DS_Play
 	ld	a,Bank(FXHammer)
+	ld	[rROMB0],a
 	call	FXHammer_Update
 	
 	pop	bc

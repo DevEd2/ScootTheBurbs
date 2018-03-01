@@ -55,6 +55,11 @@ SFX_FlipTrick		equ	9
 SFX_Land			equ	10
 SFX_Bounce			equ	11
 
+Smp_VinnySelect		equ	0
+Smp_JoelSelect		equ	1
+Smp_ThiccSelect		equ	2
+Smp_SonicSelect		equ	3
+
 ; ================================================================
 ; Serial constants
 ; ================================================================
