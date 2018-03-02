@@ -80,7 +80,7 @@ PBit_ReadyToPrint	equ	3
 PBit_LowBattery		equ	4
 PBit_Timeout		equ	5
 PBit_PaperJam		equ	6
-PBit_BadTem			equ	7
+PBit_BadTemp		equ	7
 
 ; ================================================================
 ; Error IDs

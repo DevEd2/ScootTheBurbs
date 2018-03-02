@@ -9,12 +9,14 @@
 SongSpeedTable:
 	db	8,7		; scoot the burbs
 	db	3,3		; character select
+	db	3,3		; you lose
 
 SongSpeedTable_End
 	
 SongPointerTable:
 	dw	PT_ScootTheBurbs
 	dw	PT_CharacterSelect
+	dw	PT_SFX_Crash
 SongPointerTable_End
 
 if(SongSpeedTable_End-SongSpeedTable) < (SongPointerTable_End-SongPointerTable)
@@ -76,6 +78,9 @@ vol_CharSelLead1:	db	1,$fd,$ff,$12
 vol_CharSelLeadC:	db	12,$fd,$ff,$c2
 vol_CharSelArp:		db	$ff,$b3
 
+vol_CrashFade:		db	$ff,$f7
+vol_CrashHorn:		db	$ff,$c0
+
 ; =================================================================
 ; Arpeggio/Noise sequences
 ; =================================================================
@@ -101,6 +106,9 @@ arp_Tink:			db	128+A#7,128+A_7,$fe,1
 arp_BurbsSlide1:	db	0,0,0,0,2,2,2,2,4,4,4,4,6,6,6,6,$ff
 arp_BurbsSlide2:	db	0,0,0,0,2,2,2,2,3,3,3,3,5,5,5,5,$ff
 arp_BurbsHack:		db	0,$fe,0
+
+arp_CrashVib:		db	8,12,14,16,14,12,8,6,4,2,0,2,4,6,$fe,0
+arp_CrashNoise:		db	4,5,6,5,4,3,2,1,0,1,2,3,$fe,0
 
 ; =================================================================
 ; Pulse/Wave sequences
@@ -140,6 +148,8 @@ vib_BurbsLeadC:		db	1,-1,-1,-1,0,0,0,0,0,$80,1
 vib_BurbsLead:		db	8,2,4,2,0,-2,-4,-2,0,$80,1
 vib_BurbsFade:		db	0,2,4,2,0,-2,-4,-2,0,$80,1
 
+vib_CrashHorn:		db	0,6,12,18,24,30,24,18,12,6,0,-6,-12,-18,-24,-30,-24,-18,-12,-6,0,$80,1
+
 ; =================================================================
 ; Instruments
 ; =================================================================
@@ -173,6 +183,10 @@ InstrumentTable:
 	dins	CharSelLead1
 	dins	CharSelLeadC
 	dins	CharSelArp
+	
+	dins	CrashFade
+	dins	CrashNoise
+	dins	CrashHorn
 
 ; Instrument format: [no reset flag],[voltable id],[arptable id],[wavetable id],[vibtable id]
 ; _ for no table
@@ -204,6 +218,10 @@ ins_CharSelLead2	Instrument	0,CharSelLead2,_,CharSelLead,_
 ins_CharSelLead1	Instrument	0,CharSelLead1,_,CharSelLead,_
 ins_CharSelLeadC	Instrument	0,CharSelLeadC,_,CharSelLead,_
 ins_CharSelArp		Instrument	0,CharSelArp,Buffer,CharSelArp,_
+
+ins_CrashFade		Instrument	0,CrashFade,CrashVib,Pulse50,_
+ins_CrashNoise		Instrument	0,CrashFade,CrashNoise,_,_
+ins_CrashHorn		Instrument	0,CrashHorn,_,Pulse,CrashHorn
 	
 ; =================================================================
 
@@ -552,3 +570,24 @@ CharSel_CH4:
 	Drum	Kick,4
 	ret
 ; =================================================================
+
+PT_SFX_Crash:	dw	SFX_Crash_CH1,SFX_Crash_CH2,DummyChannel,SFX_Crash_CH4
+
+SFX_Crash_CH1:
+	db	SetInstrument,id_CrashFade
+	db	C_2,32
+	db	SetInstrument,id_CrashHorn
+	db	G#4,4,rest,2,F_4,2,rest,2,A#4,2,G#4,4,rest,2,F_4,4,rest,2
+	db	EndChannel
+	
+SFX_Crash_CH2:
+	db	SetInstrument,id_CrashFade
+	db	rest,1,C_2,31
+	db	SetInstrument,id_CrashHorn
+	db	G_4,4,rest,2,E_4,2,rest,2,A_4,2,G_4,4,rest,2,E_4,4,rest,2
+	db	EndChannel
+	
+SFX_Crash_CH4:
+	db	SetInstrument,id_CrashNoise
+	db	C_3,32
+	db	EndChannel

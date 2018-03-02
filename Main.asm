@@ -1704,7 +1704,10 @@ SampleTable:
 ; =====================
 
 ShowError:
-	push	af	
+	push	af
+	ld	a,1
+	ld	[rROMB0],a
+	call	DS_Stop
 .wait
 	ldh	a,[rLY]
 	cp	$90
