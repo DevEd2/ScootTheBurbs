@@ -1601,6 +1601,7 @@ SoundTestLoop:
 	jr	nz,SoundTestLoop
 .playSample
 	ld	a,[SoundTest_SampleID]
+	ld	b,b
 	call	PlaySample
 	jr	SoundTestLoop
 .playSFX
@@ -1684,7 +1685,7 @@ SoundTestLoop:
 	dec	a
 	cp	$ff
 	jr	nz,.noUnderflow
-	ld	a,1
+	ld	a,2
 .noUnderflow
 	ld	[CursorPos],a
 	ld	a,">"
@@ -1696,7 +1697,7 @@ SoundTestLoop:
 	call	SoundTest_SetCursor
 	ld	a,[CursorPos]
 	inc	a
-	cp	2
+	cp	3
 	jr	nz,.noOverflow
 	xor	a
 .noOverflow
@@ -1712,10 +1713,9 @@ SoundTestMap:
 	db	"                    "
 	db	"> MUSIC         $00 "
 	db	"  SFX           $00 "
-;	db	"  SAMPLE        $00 "
+	db	"  SAMPLE        $00 "
 	db	"                    "
 	db	"Press Start to exit."
-	db	"                    "
 	db	"                    "
 	db	"                    "
 	db	"                    "
@@ -1754,6 +1754,7 @@ SoundTest_SetCursor:
 	ld	[hl],e
 	pop	hl
 	ret
+
 ; ================================================================
 ; Error handler
 ; ================================================================
@@ -1783,9 +1784,6 @@ ClearAttribute:
 include	"DecompressionRoutines.asm"
 
 PlaySample:
-	push	af
-	push	bc
-	push	hl
 	ld	hl,SampleTable
 	add	a
 	ld	b,0
@@ -1807,10 +1805,6 @@ PlaySample:
 	ldh	[SampleBank],a
 	ld	a,1
 	ldh	[SamplePlaying],a
-	pop	hl
-	pop	bc
-	pop	af
-	ret
 
 SampleTable:
 	dw	.vinnysel

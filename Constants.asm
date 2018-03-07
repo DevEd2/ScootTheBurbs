@@ -59,6 +59,7 @@ Smp_VinnySelect		equ	0
 Smp_JoelSelect		equ	1
 Smp_ThiccSelect		equ	2
 Smp_SonicSelect		equ	3
+Smp_B17Bomber		equ	4
 
 ; ================================================================
 ; Serial constants
