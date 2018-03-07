@@ -28,6 +28,9 @@ FXHammer:
 	db	"FX HAMMER Version 1.0 (c)2000 Aleksi Eeben (email:aleksi@cncd.fi)"
 	
 FXHammer_Trig:
+	push	af
+	push	de
+	push	hl
 	ld	e,a
 	ld	d,high(FXHammerData)
 	ld	hl,FXHammerRAM+FXHammer_RAM1
@@ -57,9 +60,14 @@ FXHammer_Trig:
 	ld	a,$44
 	add	e
 	ld	[hl],a
+	pop	hl
+	pop	de
+	pop	af
 	ret
 	
 FXHammer_Stop:
+	push	af
+	push	hl
 	ld	hl,FXHammerRAM+FXHammer_SFXCH2
 	bit	1,[hl]
 	jr	z,.jmp_4084
@@ -83,15 +91,21 @@ FXHammer_Stop:
 	xor	a
 	ld	[hl+],a
 	ld	[hl],a
+	pop	hl
+	pop	af
 	ret
 	
 FXHammer_Update:
+	push	af
+	push	bc
+	push	de
+	push	hl
 	xor	a
 	ld	hl,FXHammerRAM+FXHammer_cnt
 	or	[hl]
-	ret	z
+	jr	z,.done
 	dec	[hl]
-	ret	nz
+	jr	nz,.done
 	inc	l
 	ld	a,[hl+]
 	ld	d,[hl]
@@ -175,12 +189,17 @@ FXHammer_Update:
 	inc	e
 	ld	l,low(FXHammerRAM+FXHammer_ptr)
 	ld	[hl],e
-	ret
+	jr	.done
 .jmp_4119
 	ld	l,low(FXHammerRAM+FXHammer_ptr)
 	ld	a,8
 	add	[hl]
 	ld	[hl],a
+.done
+	pop	hl
+	pop	de
+	pop	bc
+	pop	af
 	ret
 	
 section	"FXHammer data",romx[FXHammerData],bank[FXHammerBank]

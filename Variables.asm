@@ -20,7 +20,12 @@ SpritesDisabled			ds	1
 Gradient_CurrentRed		ds	1
 Gradient_CurrentGreen	ds	1
 Gradient_CurrentBlue	ds	1
+CursorPos				ds	1
 CharSel_CharID			ds	1
+
+SoundTest_SongID		ds	1
+SoundTest_SFXID			ds	1
+SoundTest_SampleID		ds	1
 
 SECTION	"OAM buffer",WRAM0[$c100]
 OAMBuffer				ds	$100

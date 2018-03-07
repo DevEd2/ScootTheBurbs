@@ -70,7 +70,7 @@ SECTION	"Timer interrupt",ROM0[$50]
 IRQ_Timer:	jp	DoSample
 
 SECTION	"Serial interrupt",ROM0[$58]
-IRQ_Serial:	jp	SIOIntr
+IRQ_Serial:	reti
 
 SECTION	"Joypad interrupt",ROM0[$60]
 IRQ_Joypad:	reti
@@ -507,10 +507,11 @@ ShowVinesauceSplash:
 	ld	a,1
 	ld	[RGBG_fade_to_color],a
 	call	RGBG_SimpleFadeOut
+ShowTitleScreen:
 	WaitForVBlank
 	xor	a
 	ldh	[rLCDC],a
-	
+
 	CopyTileset1BPP	DebugFont,0,97
 	ld	hl,TitleMap
 	call	LoadMapTitle
@@ -526,8 +527,6 @@ ShowVinesauceSplash:
 
 	
 ;	Pal_FadeToPal	Pal_Grayscale,1,8
-
-ShowTitleScreen:
 	ld	a,0
 	ld	hl,Pal_Grayscale
 	call	LoadBGPalLine
@@ -577,7 +576,10 @@ TitleLoop::
 	call	CheckInput
 	ld	a,[sys_btnPress]
 	bit	btnStart,a
-	jr	z,TitleLoop
+	jr	nz,.exitTitle
+	bit	btnSelect,a
+	jp	nz,InitSoundTest
+	jr	TitleLoop
 	
 .exitTitle
 	call	DS_Stop
@@ -664,7 +666,7 @@ CharSelectLoop:
 	ldh	[rNR14],a
 	ldh	[rNR24],a
 	ldh	[rNR44],a
-	ld	[hl],0
+	ld	[hl],2
 	ld	a,SFX_MenuSelect
 	call	FXHammer_Trig
 	ld	b,45
@@ -710,7 +712,20 @@ CharSelectLoop:
 	ld	a,1
 	ld	[RGBG_fade_to_color],a
 	call	RGBG_SimpleFadeOut
-ShowLevelSelect:
+	jr	InitGame
+
+CharacterNames:
+	dw	.vinny
+	dw	.joel
+	dw	.thicc
+	dw	.sonic
+	
+.vinny	db	"VINNY",0
+.joel	db	"JOEL",0
+.thicc	db	"HE THICC",0
+.sonic	db	"SONIC",0
+	
+InitGame:
 	WaitForVBlank
 	xor	a
 	ldh	[rLCDC],a
@@ -718,174 +733,7 @@ ShowLevelSelect:
 .loop
 	halt
 	jr	.loop
-	
-; ================================================================
-; serial routines
-; ================================================================
 
-
-SLAVE_CODE      EQU     1       ; DO NOT CHANGE THESE VALUES
-MASTER_CODE     EQU     2       ; OR COMM_CHECK_OTHER_STATUS BREAKS!!
-
-SLAVE_INIT      EQU     $80
-MASTER_INIT     EQU     $81
-
-;Initialize comm stuff
-
-comm_not_ready:
-        xor     a
-        ld      [rd],a
-        ld      [SIODone],a
-        ld      [SIOType],a    ; Indicate serial link down
-
-        ld      a,SLAVE_CODE
-        ldh     [rSB],a
-
-        ld      a,SLAVE_INIT
-        ldh     [rSC],a
-
-        ret
-
-; Call this to start a 2 player game as a master.
-
-comm_start_master_game:
-        ld      a,MASTER_CODE
-        ldh     [rSB],a
-
-        ld      a,MASTER_INIT
-        ldh     [rSC],a
-
-        ret
-
-; Check other unit status.
-; Exit: A = 0 if other unit not ready.
-
-comm_check_other_status:
-        ld      a,[rd]
-        cp      MASTER_CODE     ; Master code received?
-        ret     z               ; yes
-
-        cp      SLAVE_CODE      ; Slave code received?
-        ret     z               ; yes
-
-        xor     a               ; A = 0
-        ret
-
-; Communications transfer
-; Entry: 'td' is byte to transmit
-; Exit:  'rd' is byte to receive
-;      All data transmitted & received is
-;     delayed by one VBlank!!!!
-
-comm_transfer:
-        ld      a,[SIOType]
-        cp      MASTER_CODE     ; Are we a master?
-        ret     nz              ; no
-
-        ld      a,MASTER_INIT
-        ldh     [rSC],a
-        ret
-
-; Synchronize both game units
-
-Synchronize:
-        ld      a,[SIOType]
-        cp      MASTER_CODE     ; Are we a master?
-        jr      z,.master       ; yes
-
-.slave: ld      a,[SIODone]
-        or      a               ; Have we received serial byte?
-        jr      z,.slave        ; no, wait
-
-        xor     a
-        ld      [SIODone],a
-        ret
-
-.master:
-        rst	$00
-
-; *** Serial Interrupt Routine ***
-
-SIOIntr:
-        push    af
-
-        ldh     a,[rSB]
-        ld      [rd],a                  ; rd <- [SB]
-
-        ld      a,[SIOType]
-        or      a                       ; Serial link established?
-        jr      nz,.linkup              ; yes
-
-        ldh     a,[rSB]
-        cp      SLAVE_CODE              ; was a slave code received?
-        jr      z,.settype              ; yes
-        cp      MASTER_CODE             ; was a master code received?
-        jr      z,.settype              ; yes
-
-        xor     a
-        ld      [rd],a
-
-        ld      a,SLAVE_CODE
-        ldh     [rSB],a
-
-        ld      a,SLAVE_INIT
-        ldh     [rSC],a
-
-        jr      .exit
-
-
-.linkup:
-        ld      a,[td]
-        ldh     [rSB],a                 ; [SB] <- td
-
-        ld      a,[SIOType]
-        cp      MASTER_CODE             ; are we a master?
-        jr      z,.exit                 ; yes, we're done
-
-        ld      a,SLAVE_INIT
-        ldh     [rSC],a
-
-        ld      a,1
-        ld      [SIODone],a
-
-.exit:
-        pop     af
-        reti
-
-.settype:
-        xor     3               ; 2 -> 1, 1 -> 2
-        ld      [SIOType],a     ; set serial type
-
-        ld      a,[td]
-        ldh     [rSB],a
-
-        ld      a,SLAVE_INIT
-        ldh     [rSC],a
-
-        pop     af
-        reti
-
-ProcessPacket:
-	ld	a,[hl+]
-	ld	b,a
-.loop
-	ld	a,[hl+]
-	ld	[td],a
-	call	comm_transfer
-	dec    b
-    jr    nz,.loop
-	ret
-		
-        SECTION "UtilityVars",wram0
-
-rd              DS      1
-td              DS      1
-SIODone         DS      1
-SIOInit         DS      1
-SIOType         DS      1       ; holds MASTER_CODE or SLAVE_CODE
-
-section	"Moar code",rom0
-	
 ; ================================================================
 ; Graphics routines
 ; ================================================================
@@ -1651,7 +1499,261 @@ DoSample:
 	pop	de
 	pop	af
 	reti	
+
+; ================================================================
+; Sound test
+; ================================================================
+
+InitSoundTest:
+	WaitForVBlank
+	di
+	xor	a
+	ldh	[rLCDC],a
 	
+	CopyTileset1BPP	DebugFont,0,97
+	ld	hl,SoundTestMap
+	call	LoadMapText
+		
+	ld	a,1
+	ld	[rROMB0],a
+	call	DS_Stop
+	
+	call	ClearAttribute
+	
+	ld	hl,Pal_Grayscale
+	xor	a
+	call	LoadBGPalLine
+	
+	ld	a,%10010001
+	ldh	[rLCDC],a
+	
+	ld	a,IEF_VBLANK+IEF_TIMER
+	ldh	[rIE],a
+	ei
+	
+	xor	a
+	ld	hl,CursorPos
+	ld	[hl+],a	; CursorPos = 0
+	ld	[hl+],a	; SoundTest_SongID = 0
+	ld	[hl+],a	; SoundTest_SFXID = 0
+	ld	[hl+],a	; SoundTest_SampleID = 0
+	
+	
+SoundTestLoop:
+	ld	hl,rROMB0
+	WaitForVBlank
+	ld	[hl],1	; load DevSound bank
+	call	DS_Play
+	ld	[hl],2	; load FX Hammer bank
+	call	FXHammer_Update
+	; sample playback happens on timer interrupt
+	
+	push	hl
+	ld	a,[CursorPos]
+	and	a
+	jr	z,.drawSongID
+	dec	a
+	jr	z,.drawSFXID
+	dec	a
+	jr	z,.drawSampleID
+.drawSongID
+	ld	hl,$9871
+	ld	a,[SoundTest_SongID]
+	call	DrawHex
+	jr	.checkInput
+.drawSFXID
+	ld	hl,$9891
+	ld	a,[SoundTest_SFXID]
+	call	DrawHex
+	jr	.checkInput
+.drawSampleID
+	ld	hl,$98b1
+	ld	a,[SoundTest_SampleID]
+	call	DrawHex	
+.checkInput
+	pop	hl
+	call	CheckInput
+	ld	a,[sys_btnPress]
+	bit	btnA,a
+	jr	nz,.doPlay
+	bit	btnB,a
+	jr	nz,.doStop
+	bit	btnLeft,a
+	jp	nz,.dec
+	bit	btnRight,a
+	jp	nz,.inc
+	bit	btnUp,a
+	jp	nz,.cursorUp
+	bit	btnDown,a
+	jp	nz,.cursorDown
+	bit	btnStart,a
+	jr	z,SoundTestLoop
+.exitSoundTest
+	jp	ShowTitleScreen
+
+.doPlay
+	ld	a,[CursorPos]
+	and	a
+	jr	z,.playSong
+	dec	a
+	jr	z,.playSFX
+	dec	a
+	jr	nz,SoundTestLoop
+.playSample
+	ld	a,[SoundTest_SampleID]
+	call	PlaySample
+	jr	SoundTestLoop
+.playSFX
+	ld	[hl],2	; load FX Hammer bank
+	ld	a,[SoundTest_SFXID]
+	call	FXHammer_Trig
+	jp	SoundTestLoop		; from here out SoundTestLoop is too far for jr to reach
+.playSong
+	ld	[hl],1	; load DevSound bank
+	ld	a,[SoundTest_SongID]
+	call	DS_Init
+	jp	SoundTestLoop
+	
+.doStop
+	ld	a,[CursorPos]
+	and	a
+	jr	z,.stopSong
+	dec	a
+	jp	nz,SoundTestLoop
+.stopSFX
+	ld	[hl],2	; load FX Hammer bank
+	call	FXHammer_Stop
+	jp	SoundTestLoop
+.stopSong
+	ld	[hl],1	; load DevSound bank
+	call	DS_Stop
+	jp	SoundTestLoop
+	
+.inc
+	ld	a,[CursorPos]
+	and	a
+	jr	z,.incSong
+	dec	a
+	jr	z,.incSFX
+	dec	a
+	jp	nz,SoundTestLoop
+.incSample
+	ld	a,[SoundTest_SampleID]
+	inc	a
+	ld	[SoundTest_SampleID],a
+	jp	SoundTestLoop
+.incSFX
+	ld	a,[SoundTest_SFXID]
+	inc	a
+	ld	[SoundTest_SFXID],a
+	jp	SoundTestLoop
+.incSong
+	ld	a,[SoundTest_SongID]
+	inc	a
+	ld	[SoundTest_SongID],a
+	jp	SoundTestLoop
+	
+.dec
+	ld	a,[CursorPos]
+	and	a
+	jr	z,.decSong
+	dec	a
+	jr	z,.decSFX
+	dec	a
+	jp	nz,SoundTestLoop
+.decSample
+	ld	a,[SoundTest_SampleID]
+	dec	a
+	ld	[SoundTest_SampleID],a
+	jp	SoundTestLoop
+.decSFX
+	ld	a,[SoundTest_SFXID]
+	dec	a
+	ld	[SoundTest_SFXID],a
+	jp	SoundTestLoop
+.decSong
+	ld	a,[SoundTest_SongID]
+	dec	a
+	ld	[SoundTest_SongID],a
+	jp	SoundTestLoop
+	
+.cursorUp
+	ld	a," "
+	call	SoundTest_SetCursor
+	ld	a,[CursorPos]
+	dec	a
+	cp	$ff
+	jr	nz,.noUnderflow
+	ld	a,1
+.noUnderflow
+	ld	[CursorPos],a
+	ld	a,">"
+	call	SoundTest_SetCursor
+	jp	SoundTestLoop
+
+.cursorDown
+	ld	a," "
+	call	SoundTest_SetCursor
+	ld	a,[CursorPos]
+	inc	a
+	cp	2
+	jr	nz,.noOverflow
+	xor	a
+.noOverflow
+	ld	[CursorPos],a
+	ld	a,">"
+	call	SoundTest_SetCursor
+	jp	SoundTestLoop
+	
+SoundTestMap:
+;		 ####################
+	db	"                    "
+	db	"   - SOUND TEST -   "
+	db	"                    "
+	db	"> MUSIC         $00 "
+	db	"  SFX           $00 "
+;	db	"  SAMPLE        $00 "
+	db	"                    "
+	db	"Press Start to exit."
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+	db	"                    "
+;		 ####################
+
+SoundTest_SetCursor:
+	push	hl
+	sub	$20
+	ld	e,a
+	ld	a,[CursorPos]
+	and	a
+	jr	z,.pos0
+	dec	a
+	jr	z,.pos1
+	dec	a
+	ret	nz
+.pos2
+	ld	hl,$98a0
+	jr	.continue
+.pos1
+	ld	hl,$9880
+	jr	.continue
+.pos0
+	ld	hl,$9860
+.continue
+	ldh	a,[rSTAT]
+	and	2
+	jr	nz,.continue
+	ld	[hl],e
+	pop	hl
+	ret
 ; ================================================================
 ; Error handler
 ; ================================================================
@@ -1662,9 +1764,28 @@ DoSample:
 ; Misc routines and data
 ; ================================================================
 
+ClearAttribute:
+	ld	a,1
+	ldh	[rVBK],a
+	ld	hl,$9800
+	ld	bc,$800
+.loop
+	xor	a
+	ld	[hl+],a
+	dec	bc
+	ld	a,b
+	or	c
+	jr	nz,.loop
+	xor	a
+	ldh	[rVBK],a
+	ret
+	
 include	"DecompressionRoutines.asm"
 
 PlaySample:
+	push	af
+	push	bc
+	push	hl
 	ld	hl,SampleTable
 	add	a
 	ld	b,0
@@ -1686,6 +1807,9 @@ PlaySample:
 	ldh	[SampleBank],a
 	ld	a,1
 	ldh	[SamplePlaying],a
+	pop	hl
+	pop	bc
+	pop	af
 	ret
 
 SampleTable:
@@ -1693,11 +1817,13 @@ SampleTable:
 	dw	.joelsel
 	dw	.thiccsel
 	dw	.sonicsel
+	dw	.b17bomber
 	
-.vinnysel	Sample	Sample_VinnySelect,	Sample_VinnySelectEnd-Sample_VinnySelect,	Bank(Sample_VinnySelect)
-.joelsel	Sample	Sample_JoelSelect,	Sample_JoelSelectEnd-Sample_JoelSelect,		Bank(Sample_JoelSelect)
-.thiccsel	Sample	Sample_ThiccSelect,	Sample_ThiccSelectEnd-Sample_ThiccSelect,	Bank(Sample_ThiccSelect)
-.sonicsel	Sample	Sample_SonicSelect,	Sample_SonicSelectEnd-Sample_SonicSelect,	Bank(Sample_SonicSelect)
+.vinnysel	Sample	Sample_VinnySelect,	Sample_VinnySelect_End-Sample_VinnySelect,	Bank(Sample_VinnySelect)
+.joelsel	Sample	Sample_JoelSelect,	Sample_JoelSelect_End-Sample_JoelSelect,	Bank(Sample_JoelSelect)
+.thiccsel	Sample	Sample_ThiccSelect,	Sample_ThiccSelect_End-Sample_ThiccSelect,	Bank(Sample_ThiccSelect)
+.sonicsel	Sample	Sample_SonicSelect,	Sample_SonicSelect_End-Sample_SonicSelect,	Bank(Sample_SonicSelect)
+.b17bomber	Sample	Sample_B17BomberA,	(Sample_B17Bomber_End-Sample_B17BomberB)+$4000,Bank(Sample_B17BomberA)	; sample too big for one bank lel
 
 ; =====================
 ; Error message routine
@@ -1860,19 +1986,27 @@ include	"DevSound.asm"	; music
 section	"Sample bank 1",romx,bank[3]
 
 Sample_VinnySelect:	incbin	"Samples/CharSel_Vinny.aud"
-Sample_VinnySelectEnd
+Sample_VinnySelect_End
 
 section	"Sample bank 2",romx,bank[4]
 
 Sample_JoelSelect:	incbin	"Samples/CharSel_Joel.aud"
-Sample_JoelSelectEnd
+Sample_JoelSelect_End
 
 section	"Sample bank 3",romx,bank[5]
 
 Sample_ThiccSelect:	incbin	"Samples/CharSel_HeThicc.aud"
-Sample_ThiccSelectEnd
+Sample_ThiccSelect_End
 
 section	"Sample bank 4",romx,bank[6]
 
 Sample_SonicSelect:	incbin	"Samples/CharSel_Sonic.aud"
-Sample_SonicSelectEnd
+Sample_SonicSelect_End
+
+section	"Sample bank 5",romx,bank[7]
+Sample_B17BomberA:	incbin	"Samples/B17BomberA.aud"
+
+
+section "Sample bank 6",romx,bank[8]
+Sample_B17BomberB:	incbin	"Samples/B17BomberB.aud"
+Sample_B17Bomber_End

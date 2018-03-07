@@ -93,7 +93,6 @@ db	"DevSound GB music player by DevEd | email: deved8@gmail.com"
 ; ================================================================
 
 DevSound_Init:
-	di
 	ld	b,a		; Preserve song ID
 	
 	xor	a
@@ -193,8 +192,8 @@ if !def(DemoSceneMode) && !def(NoWaveVolumeScaling)
 endc
 	call	VisualizerInit
 endc
-	reti
-
+	ret
+	
 ; ================================================================
 ; External command processing routine
 ; INPUT: a  = command ID
