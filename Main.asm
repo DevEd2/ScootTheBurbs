@@ -654,7 +654,6 @@ CharSelectLoop:
 	dec	[hl]
 	jr	.continue
 .select
-	ld	b,b
 	ld	[hl],1		; hl should still be ROM bank select
 	call	DS_Stop	; stop music
 	; mute all channels to prevent notes from sustaining (why does it do this?)
