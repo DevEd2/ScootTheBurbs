@@ -654,6 +654,7 @@ CharSelectLoop:
 	dec	[hl]
 	jr	.continue
 .select
+	ld	b,b
 	ld	[hl],1		; hl should still be ROM bank select
 	call	DS_Stop	; stop music
 	; mute all channels to prevent notes from sustaining (why does it do this?)
@@ -1601,7 +1602,6 @@ SoundTestLoop:
 	jr	nz,SoundTestLoop
 .playSample
 	ld	a,[SoundTest_SampleID]
-	ld	b,b
 	call	PlaySample
 	jr	SoundTestLoop
 .playSFX
@@ -1805,6 +1805,7 @@ PlaySample:
 	ldh	[SampleBank],a
 	ld	a,1
 	ldh	[SamplePlaying],a
+	ret
 
 SampleTable:
 	dw	.vinnysel
