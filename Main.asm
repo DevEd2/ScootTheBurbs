@@ -604,6 +604,7 @@ TitleLoop::
 	ldh	[rLCDC],a
 
 ShowCharSelect:
+	di
 	CopyTileset	CharSelectTiles,0,(CharSelectTiles_End-CharSelectTiles)/16
 	ld	hl,CharSelectMap
 	call	LoadMapFull
@@ -618,11 +619,26 @@ ShowCharSelect:
 	ldh	[rLCDC],a
 	Pal_FadeToPal	Pal_CharSelectMain,1,8
 
+	ld	a,3
+	ld	[StatID],a
+	ld	a,STATF_LYC
+	ldh	[rSTAT],a
+	ld	a,IEF_VBLANK+IEF_LCDC
+	ldh	[rIE],a
+	
 	ld	a,1
 	ld	[rROMB0],a
 	call	DS_Init
+	ei
+.loop
+	rst	$00
 	
-CharSelectLoop:
+	xor	a
+	ldh	[rLYC],a
+	
+	jr	.loop
+	
+ProcessCharSelect:
 	ld	hl,rROMB0
 	ld	[hl],1
 	call	DS_Play
@@ -669,6 +685,16 @@ CharSelectLoop:
 	ld	[hl],2
 	ld	a,SFX_MenuSelect
 	call	FXHammer_Trig
+	ld	a,1
+	ld	[DoExitCharSelect],a
+	
+	di
+	ld	a,IEF_VBLANK
+	ldh	[rIE],a
+	xor	a
+	ldh	[rSCX],a
+	ei
+	
 	ld	b,45
 .loop
 	push	bc
@@ -678,7 +704,7 @@ CharSelectLoop:
 	dec	b
 	jr	nz,.loop
 	di
-	ld	a,IEF_TIMER
+	ld	a,IEF_TIMER+IEF_VBLANK+IEF_LCDC
 	ldh	[rIE],a
 	ei
 	; init CH3 to prevent samples from being too quiet (isn't DS_Stop supposed to take care of this???)
@@ -696,11 +722,10 @@ CharSelectLoop:
 	ld	a,SFX_MenuBack
 	call	FXHammer_Trig
 .continue
-	WaitForVBlank
-	jp	CharSelectLoop
+	ret
 
 .sampleLoop
-	halt
+	WaitForVBlank
 	ld	a,[SamplePlaying]
 	and	a
 	jr	nz,.sampleLoop
@@ -1187,6 +1212,7 @@ StatTable:
 	dw	Stat_None
 	dw	Stat_WindowTransition
 	dw	Stat_Title
+	dw	Stat_CharSelect
 StatTable_End
 	
 Stat_None	; because reti nz doesn't exist
@@ -1315,6 +1341,65 @@ Stat_Title:	; TODO: Fix this!
 	ldh	[rLYC],a
 	ld	a,%11100111
 	ldh	[rLCDC],a
+	pop	de
+	pop	bc
+	pop	hl
+	pop	af
+	reti
+	
+Stat_CharSelect:
+	push	bc
+	push	de
+	; get current scanline
+	ldh	a,[rLY]
+	cp	0
+	jr	z,.scrollCharSelText
+	cp	15
+	jr	z,.scrollPic
+;	cp	128
+;	jr	z,.doDitherEffect
+;	cp	130
+;	jr	z,.noscroll1
+;	cp	142
+;	jr	nz,.done
+	jr	.done
+.doDitherEffect
+	ld	a,[CharSel_TitleTextScroll]
+	ldh	[rSCX],a
+	ldh	a,[rLY]
+	add	2
+	ldh	[rLYC],a
+.noscroll2
+	xor	a
+	ldh	[rSCX],a
+	ld	a,0
+	ldh	[rLYC],a
+	jr	.done
+.noscroll1
+	xor	a
+	ldh	[rSCX],a
+	ld	a,142
+	ldh	[rLYC],a
+	jr	.done
+.scrollCharSelText
+	ld	a,[CharSel_TitleTextScroll]
+	inc	a
+	ld	[CharSel_TitleTextScroll],a
+	ldh	[rSCX],a
+	
+	ld	a,[DoExitCharSelect]
+	and	a
+	call	z,ProcessCharSelect
+	
+	ld	a,15
+	ldh	[rLYC],a
+	jr	.done
+.scrollPic
+	ld	a,[CharSel_PicScroll]
+	ldh	[rSCX],a
+	ld	a,128
+	ldh	[rLYC],a
+.done
 	pop	de
 	pop	bc
 	pop	hl

@@ -22,6 +22,10 @@ Gradient_CurrentGreen	ds	1
 Gradient_CurrentBlue	ds	1
 CursorPos				ds	1
 CharSel_CharID			ds	1
+CharSel_TitleTextScroll	ds	1
+CharSel_PicScroll		ds	1
+CharSel_CharTextScroll	ds	1
+DoExitCharSelect		ds	1
 
 SoundTest_SongID		ds	1
 SoundTest_SFXID			ds	1
