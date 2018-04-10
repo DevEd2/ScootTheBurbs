@@ -715,7 +715,7 @@ ProcessCharSelect:
 	ld	a,[CharSel_CharID]
 	and	$3
 	call	PlaySample
-	jr	SoundTest_SampleLoop
+	jr	.sampleLoop
 	
 
 .back
@@ -724,12 +724,12 @@ ProcessCharSelect:
 .continue
 	ret
 
-SoundTest_SampleLoop
+.sampleLoop
 	WaitForVBlank
 	ld	a,[SamplePlaying]
 	and	a
-	jr	nz,SoundTest_SampleLoop
-SoundTest_Samplebreak
+	jr	nz,.sampleLoop
+.samplebreak
 	di
 	ld	a,IEF_VBLANK
 	ldh	[rIE],a
