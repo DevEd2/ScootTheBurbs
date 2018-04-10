@@ -745,10 +745,10 @@ CharacterNames:
 	dw	.thicc
 	dw	.sonic
 	
-.vinny	db	"VINNY",0
-.joel	db	"JOEL",0
-.thicc	db	"HE THICC",0
-.sonic	db	"SONIC",0
+.vinny	str	"VINNY"
+.joel	str	"JOEL"
+.thicc	str	"HE THICC"
+.sonic	str	"SONIC"
 	
 InitGame:
 	WaitForVBlank
@@ -2140,7 +2140,7 @@ Pic_Dummy:	include	"Pics/Dummy.pic"
 ; ================================================================
 
 EmptyString:
-	db	"                    ",0
+	str	"                    "
 	
 ; ================================================================
 ; GBS Header
