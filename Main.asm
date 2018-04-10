@@ -2042,16 +2042,17 @@ ShowError:
 	
 PrintString:
 .loop
+	; wait for VRAM accessibility
 	ldh	a,[rSTAT]
 	and	2
 	jr	nz,.loop
-	ld	a,[hl+]
-	and	a
-	ret	z
-	sub	32
-	ld	[de],a
-	inc	de
-	jr	.loop
+	ld	a,[hl+]		; get char
+	and	a			; is it zero?
+	ret	z			; if yes, return
+	sub	32			; subtract 32 for printing
+	ld	[de],a		; copy char to VRAM
+	inc	de			; increment dest pointer
+	jr	.loop		; loop
 	
 ErrorMessageTable:
 	dw	.unknown
@@ -2060,11 +2061,11 @@ ErrorMessageTable:
 	dw	.frameOver
 	dw	.destOutsideROM
 	
-.unknown		db	"Unknown error",0
-.invalidCharID	db	"Invalid character ID",0
-.spriteOver		db	"Too many sprites!",0
-.frameOver		db	"Frame time exceeded",0
-.destOutsideROM	db	"JP dest. outside ROM",0
+.unknown		str	"Unknown error"
+.invalidCharID	str	"Invalid character ID"
+.spriteOver		str	"Too many sprites!"
+.frameOver		str	"Frame time exceeded"
+.destOutsideROM	str	"JP dest. outside ROM"
 
 ; ================================================================
 ; Graphics data
