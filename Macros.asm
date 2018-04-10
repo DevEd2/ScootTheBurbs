@@ -112,10 +112,18 @@ WaitForTimer:			macro
 	rst	$20
 	endm
 	
-ToggleSerialInterrupts:	macro
-	ldh	a,[rIE]
-	xor	IEF_SERIAL
-	ldh	[rIE],a
+str:					macro
+	db	\1,0
+	endm
+	
+strpos:					macro
+	ld	de,$9800+(\1*$20)
+	endm
+	
+ClearLine:				macro
+	ld	hl,EmptyString
+	ld	de,$9800+(\1*$20)
+	call	PrintString
 	endm
 	
 include	"Z80.asm"

@@ -133,3 +133,22 @@ LoadMapText_loop:
 	dec	b
 	jr	nz,LoadMapText_loop
 	ret
+	
+; ================================================================
+; Get a pointer from a table
+; Input:  hl = pointer table
+;          a = offset
+; Output: hl = pointer
+; ================================================================
+	
+GetPointerFromTable:
+	add	a
+	add	l
+	ld	l,a
+	jr	nc,.nocarry
+	inc	h
+.nocarry
+	ld	a,[hl+]
+	ld	h,[hl]
+	ld	l,a
+	ret

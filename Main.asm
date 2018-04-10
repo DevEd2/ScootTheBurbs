@@ -715,7 +715,7 @@ ProcessCharSelect:
 	ld	a,[CharSel_CharID]
 	and	$3
 	call	PlaySample
-	jr	.sampleLoop
+	jr	SoundTest_SampleLoop
 	
 
 .back
@@ -724,12 +724,12 @@ ProcessCharSelect:
 .continue
 	ret
 
-.sampleLoop
+SoundTest_SampleLoop
 	WaitForVBlank
 	ld	a,[SamplePlaying]
 	and	a
-	jr	nz,.sampleLoop
-.samplebreak
+	jr	nz,SoundTest_SampleLoop
+SoundTest_Samplebreak
 	di
 	ld	a,IEF_VBLANK
 	ldh	[rIE],a
@@ -1612,7 +1612,7 @@ InitSoundTest:
 	ld	a,%10010001
 	ldh	[rLCDC],a
 	
-	ld	a,IEF_VBLANK+IEF_TIMER
+	ld	a,IEF_VBLANK;+IEF_TIMER
 	ldh	[rIE],a
 	ei
 	
@@ -1644,17 +1644,44 @@ SoundTestLoop:
 .drawSongID
 	ld	hl,$9871
 	ld	a,[SoundTest_SongID]
+	ld	b,a
 	call	DrawHex
-	jr	.checkInput
+	ClearLine	6
+	ld	a,b
+	cp	(SoundTest_SongNames_End-SoundTest_SongNames)/2
+	jr	nc,.blank
+	ld	hl,SoundTest_SongNames
+	jr	.doPrint
 .drawSFXID
 	ld	hl,$9891
 	ld	a,[SoundTest_SFXID]
+	ld	b,a
 	call	DrawHex
-	jr	.checkInput
+	ClearLine	6
+	ld	a,b
+	cp	(SoundTest_SFXNames_End-SoundTest_SFXNames)/2
+	jr	nc,.blank
+	ld	hl,SoundTest_SFXNames
+	jr	.doPrint
 .drawSampleID
 	ld	hl,$98b1
 	ld	a,[SoundTest_SampleID]
-	call	DrawHex	
+	ld	b,a
+	call	DrawHex
+	ClearLine	6
+	ld	a,b
+	cp	(SoundTest_SampleNames_End-SoundTest_SampleNames)/2
+	jr	nc,.blank
+	ld	hl,SoundTest_SampleNames
+	jr	.doPrint
+.blank
+	ld	hl,EmptyString
+	jr	.doPrintSkipPointer
+.doPrint
+	call	GetPointerFromTable
+.doPrintSkipPointer
+	strpos	6
+	call	PrintString
 .checkInput
 	pop	hl
 	call	CheckInput
@@ -1672,7 +1699,7 @@ SoundTestLoop:
 	bit	btnDown,a
 	jp	nz,.cursorDown
 	bit	btnStart,a
-	jr	z,SoundTestLoop
+	jp	z,SoundTestLoop
 .exitSoundTest
 	jp	ShowTitleScreen
 
@@ -1683,11 +1710,11 @@ SoundTestLoop:
 	dec	a
 	jr	z,.playSFX
 	dec	a
-	jr	nz,SoundTestLoop
+	jp	nz,SoundTestLoop
 .playSample
 	ld	a,[SoundTest_SampleID]
 	call	PlaySample
-	jr	SoundTestLoop
+	jp	SoundTestLoop
 .playSFX
 	ld	[hl],2	; load FX Hammer bank
 	ld	a,[SoundTest_SFXID]
@@ -1798,6 +1825,7 @@ SoundTestMap:
 	db	"> MUSIC         $00 "
 	db	"  SFX           $00 "
 	db	"  SAMPLE        $00 "
+	db	"(Song/sfx name here)"
 	db	"                    "
 	db	"Press Start to exit."
 	db	"                    "
@@ -1838,6 +1866,66 @@ SoundTest_SetCursor:
 	ld	[hl],e
 	pop	hl
 	ret
+	
+SoundTest_SongNames:
+	dw	SoundTest_Track1
+	dw	SoundTest_Track2
+	dw	SoundTest_Track3
+SoundTest_SongNames_End
+	
+SoundTest_Track1	str	"Main theme"
+SoundTest_Track2	str	"Character select"
+SoundTest_Track3	str	"You lose"
+
+SoundTest_SFXNames:
+	dw	SoundTest_SFX1
+	dw	SoundTest_SFX2
+	dw	SoundTest_SFX3
+	dw	SoundTest_SFX4
+	dw	SoundTest_SFX5
+	dw	SoundTest_SFX6
+	dw	SoundTest_SFX7
+	dw	SoundTest_SFX8
+	dw	SoundTest_SFX9
+	dw	SoundTest_SFX10
+	dw	SoundTest_SFX11
+	dw	SoundTest_SFX12
+	dw	SoundTest_SFX13
+	dw	SoundTest_SFX14
+	dw	SoundTest_SFX15
+	dw	SoundTest_SFX16
+SoundTest_SFXNames_End
+	
+SoundTest_SFX1	str	"Collectable 1"
+SoundTest_SFX2	str	"Menu select"
+SoundTest_SFX3	str	"Pause (old)"
+SoundTest_SFX4	str	"Big thud"
+SoundTest_SFX5	str	"Trill"
+SoundTest_SFX6	str	"Pause"
+SoundTest_SFX7	str	"Menu cursor"
+SoundTest_SFX8	str	"Jump"
+SoundTest_SFX9	str	"Menu back"
+SoundTest_SFX10	str	"Spin"
+SoundTest_SFX11	str	"Small thud"
+SoundTest_SFX12	str	"Bounce"
+SoundTest_SFX13	str	"Meow"
+SoundTest_SFX14	str	"Bark"
+SoundTest_SFX15	str	"Collectable 2"
+SoundTest_SFX16	str	"Collectable 3"
+
+SoundTest_SampleNames:
+	dw	SoundTest_Sample1
+	dw	SoundTest_Sample2
+	dw	SoundTest_Sample3
+	dw	SoundTest_Sample4
+	dw	SoundTest_Sample5
+SoundTest_SampleNames_End
+
+SoundTest_Sample1	str	"Scoot the burbs"
+SoundTest_Sample2	str	"Hell yeah"
+SoundTest_Sample3	str	"EXTRA THICC"
+SoundTest_Sample4	str	"You're too slow!"
+SoundTest_Sample5	str	"BEE SEVUNTEEN BAWMER"
 
 ; ================================================================
 ; Error handler
@@ -1934,6 +2022,7 @@ ShowError:
 	ld	a,[hl+]
 	ld	h,[hl]
 	ld	l,a
+	strpos	0
 	call	PrintString
 	
 	ld	a,IEF_VBLANK
@@ -1952,8 +2041,10 @@ ShowError:
 	jr	.loop
 	
 PrintString:
-	ld	de,$9800
 .loop
+	ldh	a,[rSTAT]
+	and	2
+	jr	nz,.loop
 	ld	a,[hl+]
 	and	a
 	ret	z
@@ -2042,6 +2133,13 @@ TitleMap:	; placeholder for now
 ; ================================================================
 
 Pic_Dummy:	include	"Pics/Dummy.pic"
+
+; ================================================================
+; Misc data
+; ================================================================
+
+EmptyString:
+	db	"                    ",0
 	
 ; ================================================================
 ; GBS Header
