@@ -977,6 +977,7 @@ WaitStat:							; wait for LCD status to change (prevents tearing when using STA
 LoadBGPal:
 	ld	a,0
 	call	LoadBGPalLine
+LoadPalPic:
 	ld	a,1
 	call	LoadBGPalLine
 	ld	a,2
@@ -1011,24 +1012,6 @@ LoadObjPal:
 	call	LoadObjPalLine
 	ld	a,7
 	call	LoadObjPalLine
-	ret
-	
-; Input: hl = palette data
-LoadPalPic:
-	ld	a,1
-	call	LoadBGPalLine
-	ld	a,2
-	call	LoadBGPalLine
-	ld	a,3
-	call	LoadBGPalLine
-	ld	a,4
-	call	LoadBGPalLine
-	ld	a,5
-	call	LoadBGPalLine
-	ld	a,6
-	call	LoadBGPalLine
-	ld	a,7
-	call	LoadBGPalLine
 	ret
 
 LoadBGColor:
@@ -1100,7 +1083,7 @@ LoadObjPalLine:
 	ret
 	
 OAM_DMA:
-	ld	a,$c1
+	ld	a,high(OAMBuffer)
 	ldh	[rDMA],a
 	ld	a,$28
 .wait
@@ -1111,27 +1094,13 @@ OAM_DMA_End
 
 CopyDMARoutine:
 	ld	hl,OAM_DMA
-	push	hl
-	ld	de,$ff80
-	ld	b,OAM_DMA_End-OAM_DMA
-	ld	c,$91
+	ld	bc,(OAM_DMA_End-OAM_DMA)<<8+low(_OAM_DMA)
 .loop
 	ld	a,[hl+]
-	ld	[de],a
-	inc	de
+	ld	[c],a
+	inc	c
 	dec	b
 	jr	nz,.loop
-	pop	hl
-	ld	de,$ff90
-	ld	b,OAM_DMA_End-OAM_DMA
-.loop2
-	ld	a,[hl+]
-	ld	[de],a
-	inc	de
-	dec	b
-	jr	nz,.loop2
-	ld	a,$c2
-	ld	[c],a
 	ret
 
 ClearOAM:
