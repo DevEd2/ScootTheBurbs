@@ -15,7 +15,7 @@ if errorlevel 1 goto :BuildError
 echo Fixing...
 rgbfix -v -p 255 %PROJECTNAME%.gbc
 echo Cleaning up...
-del %PROJECTNAME%.obj
+del *.obj
 echo Build complete.
 
 rem Make GBS file
