@@ -1,35 +1,31 @@
 @echo off
-rem	Build script for ScootTheBurbs
+set PROJECTNAME="ScootTheBurbs"
 
 rem	Build ROM
 echo Assembling...
-rgbasm -o ScootTheBurbs.obj -p 255 Main.asm
+rgbasm -o %PROJECTNAME%.obj -p 255 Main.asm
 if errorlevel 1 goto :BuildError
-rgbasm -DGBS -o ScootTheBurbs_GBS.obj -p 255 Main.asm
+rgbasm -DGBS -o %PROJECTNAME%_GBS.obj -p 255 Main.asm
 if errorlevel 1 goto :BuildError
 echo Linking...
-rgblink -p 255 -o ScootTheBurbs.gbc -n ScootTheBurbs.sym ScootTheBurbs.obj
+rgblink -p 255 -o %PROJECTNAME%.gbc -n %PROJECTNAME%.sym %PROJECTNAME%.obj
 if errorlevel 1 goto :BuildError
-rgblink -p 255 -o ScootTheBurbs_GBS.gbc ScootTheBurbs_GBS.obj
+rgblink -p 255 -o %PROJECTNAME%_GBS.gbc %PROJECTNAME%_GBS.obj
 if errorlevel 1 goto :BuildError
 echo Fixing...
-rgbfix -v -p 255 ScootTheBurbs.gbc
+rgbfix -v -p 255 %PROJECTNAME%.gbc
+echo Cleaning up...
+del %PROJECTNAME%.obj
 echo Build complete.
-goto MakeGBS
-
-rem Clean up files
-del ScootTheBurbs.obj
 
 rem Make GBS file
-:MakeGBS
 echo Building GBS file...
 
 py makegbs.py
 if errorlevel 1 goto :GBSMakeError
 echo GBS file built.
-del /f ScootTheBurbs_GBS.obj ScootTheBurbs_GBS.gbc
-echo ** Build finished with no errors **
-goto:eof
+del /f %PROJECTNAME%_GBS.obj %PROJECTNAME%_GBS.gbc
+goto :end
 
 :BuildError
 echo Build failed, aborting...
@@ -38,3 +34,6 @@ goto:eof
 :GBSMakeError
 echo GBS build failed, aborting...
 goto:eof
+
+:end
+echo ** Build finished with no errors **
