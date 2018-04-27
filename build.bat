@@ -14,8 +14,6 @@ rgblink -p 255 -o %PROJECTNAME%_GBS.gbc %PROJECTNAME%_GBS.obj
 if errorlevel 1 goto :BuildError
 echo Fixing...
 rgbfix -v -p 255 %PROJECTNAME%.gbc
-echo Cleaning up...
-del *.obj
 echo Build complete.
 
 rem Make GBS file
