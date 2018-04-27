@@ -15,10 +15,8 @@ if errorlevel 1 goto :BuildError
 echo Fixing...
 rgbfix -v -p 255 %PROJECTNAME%.gbc
 echo Build complete.
-
-rem Make GBS file
+rem Build GBS file
 echo Building GBS file...
-
 py makegbs.py
 if errorlevel 1 goto :GBSMakeError
 echo GBS file built.
@@ -34,4 +32,6 @@ echo GBS build failed, aborting...
 goto:eof
 
 :end
+rem unset vars
+set PROJECTNAME=
 echo ** Build finished with no errors **
